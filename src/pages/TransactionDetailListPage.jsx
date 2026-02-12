@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, MoreHorizontal, Trash2, X } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, X } from 'lucide-react';
+import ActionButton from '@/components/ActionButton';
 import transactionDetailService from '@/services/transactionDetailService';
 
 const TransactionDetailListPage = () => {
@@ -39,7 +40,6 @@ const TransactionDetailListPage = () => {
             quantityChange: String(item.quantityChange || ''),
         });
         setShowModal(true);
-        setActionMenuId(null);
     };
 
     const handleSubmit = async (e) => {
@@ -66,7 +66,6 @@ const TransactionDetailListPage = () => {
         if (!window.confirm('Delete this transaction detail?')) return;
         try { await transactionDetailService.delete(id); fetchData(); }
         catch (err) { alert(err?.message || 'Error'); }
-        setActionMenuId(null);
     };
 
     return (
@@ -98,7 +97,7 @@ const TransactionDetailListPage = () => {
                             <th className="text-left px-5 py-3 font-medium text-slate-500">Transaction</th>
                             <th className="text-left px-5 py-3 font-medium text-slate-500">Product</th>
                             <th className="text-right px-5 py-3 font-medium text-slate-500">Qty Change</th>
-                            <th className="text-right px-5 py-3 font-medium text-slate-500">Actions</th>
+                            <th className="text-left px-5 py-3 font-medium text-slate-500">Actions</th>
                         </tr></thead>
                         <tbody>{filtered.map(r => (
                             <tr key={r.transactionDetailId} className="border-b border-slate-50 hover:bg-slate-50/50">
@@ -106,16 +105,10 @@ const TransactionDetailListPage = () => {
                                 <td className="px-5 py-3 text-slate-600">#{r.transaction?.transactionId}</td>
                                 <td className="px-5 py-3 text-slate-600">{r.product?.productName || '-'}</td>
                                 <td className="px-5 py-3 text-right font-medium text-slate-900">{r.quantityChange}</td>
-                                <td className="px-5 py-3 text-right">
-                                    <div className="relative inline-block">
-                                        <button onClick={() => setActionMenuId(actionMenuId === r.transactionDetailId ? null : r.transactionDetailId)} className="p-1.5 hover:bg-slate-100 rounded-lg"><MoreHorizontal className="w-4 h-4 text-slate-400" /></button>
-                                        {actionMenuId === r.transactionDetailId && (<>
-                                            <div className="fixed inset-0 z-40" onClick={() => setActionMenuId(null)} />
-                                            <div className="absolute right-0 top-full mt-1 w-36 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-50">
-                                                <button onClick={() => openEdit(r)} className="w-full text-left px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">Edit</button>
-                                                <button onClick={() => handleDelete(r.transactionDetailId)} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50"><Trash2 className="w-3.5 h-3.5" /> Delete</button>
-                                            </div>
-                                        </>)}
+                                <td className="px-5 py-3">
+                                    <div className="flex items-center gap-1.5">
+                                        <ActionButton onClick={() => openEdit(r)} icon={Pencil} title="Edit" color="blue" />
+                                        <ActionButton onClick={() => handleDelete(r.transactionDetailId)} icon={Trash2} title="Delete" color="red" />
                                     </div>
                                 </td>
                             </tr>

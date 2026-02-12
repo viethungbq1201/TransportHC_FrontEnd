@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, MoreHorizontal, Pencil, Trash2, X, CalendarClock, CheckCircle, XCircle, StopCircle, Ban } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, X, CalendarClock, CheckCircle, XCircle, StopCircle, Ban } from 'lucide-react';
+import ActionButton from '@/components/ActionButton';
 import scheduleService from '@/services/scheduleService';
 import { ScheduleStatus, ScheduleStatusLabels, ApproveStatus, ApproveStatusLabels } from '@/constants/enums';
 
@@ -31,7 +32,6 @@ const ScheduleListPage = () => {
     // Backend DTO: ScheduleCreateRequest { userId, truckId, routeId, departureDate }
     const [form, setForm] = useState({ userId: '', truckId: '', routeId: '', departureDate: '' });
     const [saving, setSaving] = useState(false);
-    const [actionMenuId, setActionMenuId] = useState(null);
 
     // End schedule modal
     const [showEndModal, setShowEndModal] = useState(false);
@@ -66,7 +66,6 @@ const ScheduleListPage = () => {
             departureDate: item.departureDate ? item.departureDate.split('T')[0] : '',
         });
         setShowModal(true);
-        setActionMenuId(null);
     };
 
     const handleSubmit = async (e) => {
@@ -92,18 +91,18 @@ const ScheduleListPage = () => {
     };
 
     // Approve/Reject/Cancel use GET — no request body!
-    const handleApprove = async (id) => { try { await scheduleService.approveSchedule(id); fetchData(); } catch (err) { alert(err?.message || 'Error'); } setActionMenuId(null); };
-    const handleReject = async (id) => { try { await scheduleService.rejectSchedule(id); fetchData(); } catch (err) { alert(err?.message || 'Error'); } setActionMenuId(null); };
-    const handleCancel = async (id) => { try { await scheduleService.cancelSchedule(id); fetchData(); } catch (err) { alert(err?.message || 'Error'); } setActionMenuId(null); };
+    const handleApprove = async (id) => { try { await scheduleService.approveSchedule(id); fetchData(); } catch (err) { alert(err?.message || 'Error'); } };
+    const handleReject = async (id) => { try { await scheduleService.rejectSchedule(id); fetchData(); } catch (err) { alert(err?.message || 'Error'); } };
+    const handleCancel = async (id) => { try { await scheduleService.cancelSchedule(id); fetchData(); } catch (err) { alert(err?.message || 'Error'); } };
 
-    const openEndModal = (id) => { setEndingScheduleId(id); setEndForm({ actualArrivalTime: '', note: '' }); setShowEndModal(true); setActionMenuId(null); };
+    const openEndModal = (id) => { setEndingScheduleId(id); setEndForm({ actualArrivalTime: '', note: '' }); setShowEndModal(true); };
     const handleEndSchedule = async (e) => {
         e.preventDefault();
         try { await scheduleService.endSchedule(endingScheduleId, endForm); setShowEndModal(false); fetchData(); }
         catch (err) { alert(err?.message || 'Error'); }
     };
 
-    const handleDelete = async (id) => { if (!window.confirm('Delete this schedule?')) return; try { await scheduleService.deleteSchedule(id); fetchData(); } catch (err) { alert(err?.message || 'Error'); } setActionMenuId(null); };
+    const handleDelete = async (id) => { if (!window.confirm('Delete this schedule?')) return; try { await scheduleService.deleteSchedule(id); fetchData(); } catch (err) { alert(err?.message || 'Error'); } };
 
     return (
         <div>
@@ -146,22 +145,21 @@ const ScheduleListPage = () => {
                                 <td className="px-5 py-3.5 text-sm text-slate-500">{formatDate(item.departureDate)}</td>
                                 <td className="px-5 py-3.5"><span className={`inline-flex px-2.5 py-0.5 text-xs font-medium rounded-full border ${statusBadge(item.status)}`}>{ScheduleStatusLabels[item.status] || item.status}</span></td>
                                 <td className="px-5 py-3.5"><span className={`inline-flex px-2.5 py-0.5 text-xs font-medium rounded-full border ${approveBadge(item.approveStatus)}`}>{ApproveStatusLabels[item.approveStatus] || item.approveStatus || '-'}</span></td>
-                                <td className="px-5 py-3.5 relative">
-                                    <button onClick={() => setActionMenuId(actionMenuId === item.id ? null : item.id)} className="p-1 text-slate-400 hover:text-slate-600"><MoreHorizontal className="w-5 h-5" /></button>
-                                    {actionMenuId === item.id && (<><div className="fixed inset-0 z-30" onClick={() => setActionMenuId(null)} /><div className="absolute right-4 top-10 bg-white border border-slate-200 rounded-lg shadow-lg py-1 z-40 w-44">
-                                        <button onClick={() => openEdit(item)} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"><Pencil className="w-3.5 h-3.5" /> Edit</button>
+                                <td className="px-5 py-3.5">
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                        <ActionButton onClick={() => openEdit(item)} icon={Pencil} title="Edit" color="blue" />
                                         {item.approveStatus === ApproveStatus.PENDING && <>
-                                            <button onClick={() => handleApprove(item.id)} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-green-600 hover:bg-green-50"><CheckCircle className="w-3.5 h-3.5" /> Approve</button>
-                                            <button onClick={() => handleReject(item.id)} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50"><XCircle className="w-3.5 h-3.5" /> Reject</button>
+                                            <ActionButton onClick={() => handleApprove(item.id)} icon={CheckCircle} title="Approve" color="green" />
+                                            <ActionButton onClick={() => handleReject(item.id)} icon={XCircle} title="Reject" color="amber" />
                                         </>}
                                         {item.status === ScheduleStatus.DELIVERING && (
-                                            <button onClick={() => openEndModal(item.id)} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-indigo-600 hover:bg-indigo-50"><StopCircle className="w-3.5 h-3.5" /> End Schedule</button>
+                                            <ActionButton onClick={() => openEndModal(item.id)} icon={StopCircle} title="End Schedule" color="indigo" />
                                         )}
                                         {item.status === ScheduleStatus.WAITING && (
-                                            <button onClick={() => handleCancel(item.id)} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-amber-600 hover:bg-amber-50"><Ban className="w-3.5 h-3.5" /> Cancel</button>
+                                            <ActionButton onClick={() => handleCancel(item.id)} icon={Ban} title="Cancel" color="amber" />
                                         )}
-                                        <button onClick={() => handleDelete(item.id)} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50"><Trash2 className="w-3.5 h-3.5" /> Delete</button>
-                                    </div></>)}
+                                        <ActionButton onClick={() => handleDelete(item.id)} icon={Trash2} title="Delete" color="red" />
+                                    </div>
                                 </td>
                             </tr>
                         ))}</tbody></table>

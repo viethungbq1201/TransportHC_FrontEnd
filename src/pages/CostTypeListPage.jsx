@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, MoreHorizontal, Pencil, Trash2, X, Tag } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, X, Tag } from 'lucide-react';
+import ActionButton from '@/components/ActionButton';
 import costTypeService from '@/services/costTypeService';
 
 const CostTypeListPage = () => {
@@ -19,9 +20,9 @@ const CostTypeListPage = () => {
     const formatDate = (d) => { if (!d) return '-'; try { return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); } catch { return '-'; } };
 
     const openCreate = () => { setEditingItem(null); setForm({ name: '', description: '' }); setShowModal(true); };
-    const openEdit = (item) => { setEditingItem(item); setForm({ name: item.name || '', description: item.description || '' }); setShowModal(true); setActionMenuId(null); };
+    const openEdit = (item) => { setEditingItem(item); setForm({ name: item.name || '', description: item.description || '' }); setShowModal(true); };
     const handleSubmit = async (e) => { e.preventDefault(); setSaving(true); try { if (editingItem) await costTypeService.updateCostType(editingItem.id, form); else await costTypeService.createCostType(form); setShowModal(false); fetchData(); } catch (err) { alert(err?.message || 'Error'); } finally { setSaving(false); } };
-    const handleDelete = async (id) => { if (!window.confirm('Delete this cost type?')) return; try { await costTypeService.deleteCostType(id); fetchData(); } catch (err) { alert(err?.message || 'Error'); } setActionMenuId(null); };
+    const handleDelete = async (id) => { if (!window.confirm('Delete this cost type?')) return; try { await costTypeService.deleteCostType(id); fetchData(); } catch (err) { alert(err?.message || 'Error'); } };
 
     return (
         <div>
@@ -46,9 +47,11 @@ const CostTypeListPage = () => {
                                 <td className="px-5 py-3.5 text-sm font-medium text-slate-900">{item.name}</td>
                                 <td className="px-5 py-3.5 text-sm text-slate-600">{item.description || '-'}</td>
                                 <td className="px-5 py-3.5 text-sm text-slate-500">{formatDate(item.createdAt)}</td>
-                                <td className="px-5 py-3.5 relative">
-                                    <button onClick={() => setActionMenuId(actionMenuId === item.id ? null : item.id)} className="p-1 text-slate-400 hover:text-slate-600"><MoreHorizontal className="w-5 h-5" /></button>
-                                    {actionMenuId === item.id && (<><div className="fixed inset-0 z-30" onClick={() => setActionMenuId(null)} /><div className="absolute right-4 top-10 bg-white border border-slate-200 rounded-lg shadow-lg py-1 z-40 w-36"><button onClick={() => openEdit(item)} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"><Pencil className="w-3.5 h-3.5" /> Edit</button><button onClick={() => handleDelete(item.id)} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50"><Trash2 className="w-3.5 h-3.5" /> Delete</button></div></>)}
+                                <td className="px-5 py-3.5">
+                                    <div className="flex items-center gap-1.5">
+                                        <ActionButton onClick={() => openEdit(item)} icon={Pencil} title="Edit" color="blue" />
+                                        <ActionButton onClick={() => handleDelete(item.id)} icon={Trash2} title="Delete" color="red" />
+                                    </div>
                                 </td>
                             </tr>
                         ))}</tbody></table>

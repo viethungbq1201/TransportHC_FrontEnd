@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, MoreHorizontal, Trash2, X, MapPin } from 'lucide-react';
+import { Plus, Search, Trash2, X, MapPin } from 'lucide-react';
+import ActionButton from '@/components/ActionButton';
 import routeService from '@/services/routeService';
 
 const RouteListPage = () => {
@@ -21,7 +22,7 @@ const RouteListPage = () => {
 
     // No updateRoute endpoint in backend — create only
     const handleSubmit = async (e) => { e.preventDefault(); setSaving(true); try { await routeService.createRoute(form); setShowModal(false); fetchData(); } catch (err) { alert(err?.message || 'Error'); } finally { setSaving(false); } };
-    const handleDelete = async (id) => { if (!window.confirm('Delete this route?')) return; try { await routeService.deleteRoute(id); fetchData(); } catch (err) { alert(err?.message || 'Error'); } setActionMenuId(null); };
+    const handleDelete = async (id) => { if (!window.confirm('Delete this route?')) return; try { await routeService.deleteRoute(id); fetchData(); } catch (err) { alert(err?.message || 'Error'); } };
 
     return (
         <div>
@@ -52,11 +53,10 @@ const RouteListPage = () => {
                                 <td className="px-5 py-3.5 text-sm text-slate-600">{item.endPoint}</td>
                                 <td className="px-5 py-3.5 text-sm text-slate-600">{item.distance ? `${item.distance} km` : '-'}</td>
                                 <td className="px-5 py-3.5 text-sm text-slate-600">{item.estimatedTime || '-'}</td>
-                                <td className="px-5 py-3.5 relative">
-                                    <button onClick={() => setActionMenuId(actionMenuId === item.id ? null : item.id)} className="p-1 text-slate-400 hover:text-slate-600"><MoreHorizontal className="w-5 h-5" /></button>
-                                    {actionMenuId === item.id && (<><div className="fixed inset-0 z-30" onClick={() => setActionMenuId(null)} /><div className="absolute right-4 top-10 bg-white border border-slate-200 rounded-lg shadow-lg py-1 z-40 w-36">
-                                        <button onClick={() => handleDelete(item.id)} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50"><Trash2 className="w-3.5 h-3.5" /> Delete</button>
-                                    </div></>)}
+                                <td className="px-5 py-3.5">
+                                    <div className="flex items-center gap-1.5">
+                                        <ActionButton onClick={() => handleDelete(item.id)} icon={Trash2} title="Delete" color="red" />
+                                    </div>
                                 </td>
                             </tr>
                         ))}</tbody>

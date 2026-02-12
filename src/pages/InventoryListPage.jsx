@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, MoreHorizontal, Pencil, Trash2, X, Warehouse, Package, AlertTriangle, Download, ArrowUp, ArrowDown } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, X, Warehouse, Package, AlertTriangle, Download, ArrowUp, ArrowDown } from 'lucide-react';
+import ActionButton from '@/components/ActionButton';
 import inventoryService from '@/services/inventoryService';
 
 const InventoryListPage = () => {
@@ -107,12 +108,11 @@ const InventoryListPage = () => {
                                         {item.upToDate ? 'Yes' : 'No'}
                                     </span>
                                 </td>
-                                <td className="px-5 py-3.5 relative">
-                                    <button onClick={() => setActionMenuId(actionMenuId === item.inventoryId ? null : item.inventoryId)} className="p-1 text-slate-400 hover:text-slate-600"><MoreHorizontal className="w-5 h-5" /></button>
-                                    {actionMenuId === item.inventoryId && (<><div className="fixed inset-0 z-30" onClick={() => setActionMenuId(null)} /><div className="absolute right-4 top-10 bg-white border border-slate-200 rounded-lg shadow-lg py-1 z-40 w-36">
-                                        <button onClick={() => openEdit(item)} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"><Pencil className="w-3.5 h-3.5" /> Edit</button>
-                                        <button onClick={() => handleDelete(item.inventoryId)} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50"><Trash2 className="w-3.5 h-3.5" /> Delete</button>
-                                    </div></>)}
+                                <td className="px-5 py-3.5">
+                                    <div className="flex items-center gap-1.5">
+                                        <ActionButton onClick={() => openEdit(item)} icon={Pencil} title="Edit" color="blue" />
+                                        <ActionButton onClick={() => handleDelete(item.inventoryId)} icon={Trash2} title="Delete" color="red" />
+                                    </div>
                                 </td>
                             </tr>
                         ))}</tbody></table>

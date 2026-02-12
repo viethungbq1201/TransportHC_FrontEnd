@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, MoreHorizontal, Pencil, Trash2, X, Users as UsersIcon } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, X, Users as UsersIcon } from 'lucide-react';
+import ActionButton from '@/components/ActionButton';
 import userService from '@/services/userService';
 import { RoleCode, RoleCodeLabels, UserStatus, UserStatusLabels, UserStatusColors } from '@/constants/enums';
 
@@ -21,7 +22,6 @@ const UserListPage = () => {
         advanceMoney: '',
     });
     const [saving, setSaving] = useState(false);
-    const [actionMenuId, setActionMenuId] = useState(null);
 
     const fetchUsers = async () => {
         try {
@@ -82,7 +82,6 @@ const UserListPage = () => {
             advanceMoney: user.advanceMoney || '',
         });
         setShowModal(true);
-        setActionMenuId(null);
     };
 
     const handleSubmit = async (e) => {
@@ -124,7 +123,6 @@ const UserListPage = () => {
     const handleDelete = async (id) => {
         if (!window.confirm('Delete this user?')) return;
         try { await userService.deleteUser(id); fetchUsers(); } catch (err) { alert(err?.message || 'Error'); }
-        setActionMenuId(null);
     };
 
     const handleStatusChange = async (user, newStatus) => {
@@ -132,7 +130,6 @@ const UserListPage = () => {
             await userService.updateStatus(user.id, { status: newStatus });
             fetchUsers();
         } catch (err) { alert(err?.message || 'Error'); }
-        setActionMenuId(null);
     };
 
     const roleBadge = (role) => {
@@ -243,42 +240,11 @@ const UserListPage = () => {
                                         </span>
                                     </td>
                                     <td className="px-5 py-4 text-sm text-slate-500">{formatDate(user.createdAt)}</td>
-                                    <td className="px-5 py-4 relative">
-                                        <button
-                                            onClick={() => setActionMenuId(actionMenuId === user.id ? null : user.id)}
-                                            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-                                        >
-                                            <MoreHorizontal className="w-5 h-5" />
-                                        </button>
-                                        {actionMenuId === user.id && (
-                                            <>
-                                                <div className="fixed inset-0 z-30" onClick={() => setActionMenuId(null)} />
-                                                <div className="absolute right-0 top-10 bg-white border border-slate-200 rounded-lg shadow-lg py-1 z-40 w-44">
-                                                    <button onClick={() => openEdit(user)} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50">
-                                                        <Pencil className="w-4 h-4" /> Edit User
-                                                    </button>
-                                                    {/* Status change options */}
-                                                    {user.status !== UserStatus.AVAILABLE && (
-                                                        <button onClick={() => handleStatusChange(user, UserStatus.AVAILABLE)} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-emerald-600 hover:bg-emerald-50">
-                                                            Set Available
-                                                        </button>
-                                                    )}
-                                                    {user.status !== UserStatus.BUSY && (
-                                                        <button onClick={() => handleStatusChange(user, UserStatus.BUSY)} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-amber-600 hover:bg-amber-50">
-                                                            Set Busy
-                                                        </button>
-                                                    )}
-                                                    {user.status !== UserStatus.OFFLINE && (
-                                                        <button onClick={() => handleStatusChange(user, UserStatus.OFFLINE)} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50">
-                                                            Set Offline
-                                                        </button>
-                                                    )}
-                                                    <button onClick={() => handleDelete(user.id)} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50">
-                                                        <Trash2 className="w-4 h-4" /> Delete User
-                                                    </button>
-                                                </div>
-                                            </>
-                                        )}
+                                    <td className="px-5 py-4">
+                                        <div className="flex items-center gap-1.5">
+                                            <ActionButton onClick={() => openEdit(user)} icon={Pencil} title="Edit" color="blue" />
+                                            <ActionButton onClick={() => handleDelete(user.id)} icon={Trash2} title="Delete" color="red" />
+                                        </div>
                                     </td>
                                 </tr>
                             ))}

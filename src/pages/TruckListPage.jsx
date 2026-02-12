@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, MoreHorizontal, Trash2, X, Truck as TruckIcon } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, X, Truck as TruckIcon } from 'lucide-react';
+import ActionButton from '@/components/ActionButton';
 import truckService from '@/services/truckService';
 import { TruckStatus, TruckStatusLabels } from '@/constants/enums';
 
@@ -20,7 +21,6 @@ const TruckListPage = () => {
     const [showModal, setShowModal] = useState(false);
     const [form, setForm] = useState({ licensePlate: '', model: '', capacity: '', driverAssigned: '', status: 'AVAILABLE' });
     const [saving, setSaving] = useState(false);
-    const [actionMenuId, setActionMenuId] = useState(null);
 
     const fetchTrucks = async () => {
         try {
@@ -56,14 +56,12 @@ const TruckListPage = () => {
             await truckService.updateTruckStatus(truck.id, { status: newStatus });
             fetchTrucks();
         } catch (err) { alert(err?.message || 'Error updating status'); }
-        setActionMenuId(null);
     };
 
     const handleDelete = async (id) => {
         if (!window.confirm('Are you sure you want to delete this truck?')) return;
         try { await truckService.deleteTruck(id); fetchTrucks(); }
         catch (err) { alert(err?.message || 'Error deleting truck'); }
-        setActionMenuId(null);
     };
 
     const formatDate = (d) => { if (!d) return '-'; try { return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); } catch { return '-'; } };
@@ -127,28 +125,10 @@ const TruckListPage = () => {
                                     <td className="px-5 py-3.5 text-sm text-slate-600">{truck.driverAssigned || <span className="text-slate-400">Not assigned</span>}</td>
                                     <td className="px-5 py-3.5"><span className={`inline-flex px-2.5 py-0.5 text-xs font-medium rounded-full border ${statusBadge(truck.status)}`}>{TruckStatusLabels[truck.status] || truck.status}</span></td>
                                     <td className="px-5 py-3.5 text-sm text-slate-500">{formatDate(truck.createdAt)}</td>
-                                    <td className="px-5 py-3.5 relative">
-                                        <button onClick={() => setActionMenuId(actionMenuId === truck.id ? null : truck.id)} className="p-1 text-slate-400 hover:text-slate-600 rounded">
-                                            <MoreHorizontal className="w-5 h-5" />
-                                        </button>
-                                        {actionMenuId === truck.id && (
-                                            <>
-                                                <div className="fixed inset-0 z-30" onClick={() => setActionMenuId(null)} />
-                                                <div className="absolute right-4 top-10 bg-white border border-slate-200 rounded-lg shadow-lg py-1 z-40 w-44">
-                                                    {/* Status change options */}
-                                                    {truck.status !== TruckStatus.AVAILABLE && (
-                                                        <button onClick={() => handleStatusChange(truck, TruckStatus.AVAILABLE)} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-emerald-600 hover:bg-emerald-50">Set Available</button>
-                                                    )}
-                                                    {truck.status !== TruckStatus.IN_USE && (
-                                                        <button onClick={() => handleStatusChange(truck, TruckStatus.IN_USE)} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-blue-600 hover:bg-blue-50">Set In Use</button>
-                                                    )}
-                                                    {truck.status !== TruckStatus.MAINTENANCE && (
-                                                        <button onClick={() => handleStatusChange(truck, TruckStatus.MAINTENANCE)} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-amber-600 hover:bg-amber-50">Set Maintenance</button>
-                                                    )}
-                                                    <button onClick={() => handleDelete(truck.id)} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50"><Trash2 className="w-3.5 h-3.5" /> Delete</button>
-                                                </div>
-                                            </>
-                                        )}
+                                    <td className="px-5 py-3.5">
+                                        <div className="flex items-center gap-1.5">
+                                            <ActionButton onClick={() => handleDelete(truck.id)} icon={Trash2} title="Delete" color="red" />
+                                        </div>
                                     </td>
                                 </tr>
                             ))}

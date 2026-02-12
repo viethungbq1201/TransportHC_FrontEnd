@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, MoreHorizontal, Trash2, X, FileText, CheckCircle, XCircle } from 'lucide-react';
+import { Plus, Search, Trash2, X, FileText, CheckCircle, XCircle } from 'lucide-react';
+import ActionButton from '@/components/ActionButton';
 import transactionService from '@/services/transactionService';
 import { ApproveStatus, ApproveStatusLabels, ApproveStatusColors, TransactionType, TransactionTypeLabels } from '@/constants/enums';
 
@@ -29,7 +30,6 @@ const TransactionListPage = () => {
     // Backend DTO: TransactionCreateRequest { transactionType: "IMPORT"|"EXPORT" }
     const [form, setForm] = useState({ transactionType: 'IMPORT' });
     const [saving, setSaving] = useState(false);
-    const [actionMenuId, setActionMenuId] = useState(null);
 
     const fetchData = async () => { try { const data = await transactionService.getAllTransactions(); setItems(Array.isArray(data) ? data : []); } catch { setItems([]); } finally { setLoading(false); } };
     useEffect(() => { fetchData(); }, []);
@@ -51,9 +51,9 @@ const TransactionListPage = () => {
     const handleSubmit = async (e) => { e.preventDefault(); setSaving(true); try { await transactionService.createTransaction(form); setShowModal(false); fetchData(); } catch (err) { alert(err?.message || 'Error'); } finally { setSaving(false); } };
 
     // Approve/Reject are separate PUT endpoints with NO body
-    const handleApprove = async (id) => { try { await transactionService.approveTransaction(id); fetchData(); } catch (err) { alert(err?.message || 'Error'); } setActionMenuId(null); };
-    const handleReject = async (id) => { try { await transactionService.rejectTransaction(id); fetchData(); } catch (err) { alert(err?.message || 'Error'); } setActionMenuId(null); };
-    const handleDelete = async (id) => { if (!window.confirm('Delete this transaction?')) return; try { await transactionService.deleteTransaction(id); fetchData(); } catch (err) { alert(err?.message || 'Error'); } setActionMenuId(null); };
+    const handleApprove = async (id) => { try { await transactionService.approveTransaction(id); fetchData(); } catch (err) { alert(err?.message || 'Error'); } };
+    const handleReject = async (id) => { try { await transactionService.rejectTransaction(id); fetchData(); } catch (err) { alert(err?.message || 'Error'); } };
+    const handleDelete = async (id) => { if (!window.confirm('Delete this transaction?')) return; try { await transactionService.deleteTransaction(id); fetchData(); } catch (err) { alert(err?.message || 'Error'); } };
 
     return (
         <div>
@@ -85,15 +85,14 @@ const TransactionListPage = () => {
                                 <td className="px-5 py-3.5 text-sm text-slate-600">{item.createdBy?.fullName || '-'}</td>
                                 <td className="px-5 py-3.5"><span className={`inline-flex px-2.5 py-0.5 text-xs font-medium rounded-full border ${approveBadge(item.approveStatus)}`}>{ApproveStatusLabels[item.approveStatus] || item.approveStatus || '-'}</span></td>
                                 <td className="px-5 py-3.5 text-sm text-slate-500">{formatDate(item.createdAt)}</td>
-                                <td className="px-5 py-3.5 relative">
-                                    <button onClick={() => setActionMenuId(actionMenuId === item.transactionId ? null : item.transactionId)} className="p-1 text-slate-400 hover:text-slate-600"><MoreHorizontal className="w-5 h-5" /></button>
-                                    {actionMenuId === item.transactionId && (<><div className="fixed inset-0 z-30" onClick={() => setActionMenuId(null)} /><div className="absolute right-4 top-10 bg-white border border-slate-200 rounded-lg shadow-lg py-1 z-40 w-40">
+                                <td className="px-5 py-3.5">
+                                    <div className="flex items-center gap-1.5">
                                         {item.approveStatus === ApproveStatus.PENDING && <>
-                                            <button onClick={() => handleApprove(item.transactionId)} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-green-600 hover:bg-green-50"><CheckCircle className="w-3.5 h-3.5" /> Approve</button>
-                                            <button onClick={() => handleReject(item.transactionId)} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50"><XCircle className="w-3.5 h-3.5" /> Reject</button>
+                                            <ActionButton onClick={() => handleApprove(item.transactionId)} icon={CheckCircle} title="Approve" color="green" />
+                                            <ActionButton onClick={() => handleReject(item.transactionId)} icon={XCircle} title="Reject" color="amber" />
                                         </>}
-                                        <button onClick={() => handleDelete(item.transactionId)} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50"><Trash2 className="w-3.5 h-3.5" /> Delete</button>
-                                    </div></>)}
+                                        <ActionButton onClick={() => handleDelete(item.transactionId)} icon={Trash2} title="Delete" color="red" />
+                                    </div>
                                 </td>
                             </tr>
                         ))}</tbody></table>
