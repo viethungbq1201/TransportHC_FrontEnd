@@ -1,37 +1,33 @@
 import axiosInstance from '@/api/axiosInstance';
 
 const salaryReportService = {
-    // GET /salaryReport/viewSalaryReport
-    getSalaryReports: async (params) => {
-        const data = await axiosInstance.get('/salaryReport/viewSalaryReport', { params });
+    // POST /salaryReport/viewSalaryReport
+    // Body: SalaryReportCreateRequest { yearMonth: "2026-01-01" } (LocalDate — first day of month)
+    // Returns: List<SalaryReportSummaryResponse>
+    getSalaryReports: async (yearMonth) => {
+        const data = await axiosInstance.post('/salaryReport/viewSalaryReport', { yearMonth });
         return Array.isArray(data) ? data : [];
     },
 
-    // GET /salaryReport/viewSalaryReportDetail?
-    // Docs: "View report detail".
-    // I'll assume /salaryReport/viewSalaryReportDetail/{id}
+    // GET /salaryReport/viewSalaryReportDetail/{salaryReportId} → SalaryReportResponse
     getSalaryReportDetail: (id) => axiosInstance.get(`/salaryReport/viewSalaryReportDetail/${id}`),
 
-    // POST /salaryReport/createSalaryReport (Single)
-    createSalaryReport: (data) => axiosInstance.post('/salaryReport/createSalaryReport', data),
+    // POST /salaryReport/create1/{salaryReportId}
+    // Body: SalaryReportRequest { basicSalary, reward, cost, advanceMoney }
+    createSalaryReport: (id, data) => axiosInstance.post(`/salaryReport/create1/${id}`, data),
 
-    // POST /salaryReport/createAllSalaryReport (All)
-    createAllSalaryReport: (data) => axiosInstance.post('/salaryReport/createAllSalaryReport', data),
+    // GET /salaryReport/createAllSalaryReport — no body
+    createAllSalaryReport: () => axiosInstance.get('/salaryReport/createAllSalaryReport'),
 
     // PUT /salaryReport/updateSalaryReport/{salaryReportId}
+    // Body: SalaryReportRequest { basicSalary, reward, cost, advanceMoney }
     updateSalaryReport: (id, data) => axiosInstance.put(`/salaryReport/updateSalaryReport/${id}`, data),
 
     // DELETE /salaryReport/deleteSalaryReport/{salaryReportId}
     deleteSalaryReport: (id) => axiosInstance.delete(`/salaryReport/deleteSalaryReport/${id}`),
 
-    // PUT /salaryReport/approveSalaryReport/{id} ???
-    // Docs: "Mark as done".
-    // Maybe PUT /salaryReport/markAsDone/{id}?
-    // Or PUT /salaryReport/updateStatus/{id}?
-    // I'll guess `updateStatus` or similar given `done` is a status.
-    // Spec: "Endpoints: ... Mark as done".
-    // I'll try PUT /salaryReport/markAsDone/${id}
-    markAsDone: (id) => axiosInstance.put(`/salaryReport/markAsDone/${id}`),
+    // GET /salaryReport/doneSalaryReport/{salaryReportId} — no body!
+    markAsDone: (id) => axiosInstance.get(`/salaryReport/doneSalaryReport/${id}`),
 };
 
 export default salaryReportService;

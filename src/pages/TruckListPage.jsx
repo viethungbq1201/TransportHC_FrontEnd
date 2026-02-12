@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, MoreHorizontal, Pencil, Trash2, X, Truck as TruckIcon } from 'lucide-react';
+import { Plus, Search, MoreHorizontal, Trash2, X, Truck as TruckIcon } from 'lucide-react';
 import truckService from '@/services/truckService';
-import { TruckStatus } from '@/constants/enums';
+import { TruckStatus, TruckStatusLabels } from '@/constants/enums';
 
 const statusBadge = (status) => {
     const map = {
@@ -18,7 +18,6 @@ const TruckListPage = () => {
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
     const [showModal, setShowModal] = useState(false);
-    const [editingTruck, setEditingTruck] = useState(null);
     const [form, setForm] = useState({ licensePlate: '', model: '', capacity: '', driverAssigned: '', status: 'AVAILABLE' });
     const [saving, setSaving] = useState(false);
     const [actionMenuId, setActionMenuId] = useState(null);
@@ -39,19 +38,25 @@ const TruckListPage = () => {
         return matchSearch && matchStatus;
     });
 
-    const openCreate = () => { setEditingTruck(null); setForm({ licensePlate: '', model: '', capacity: '', driverAssigned: '', status: 'AVAILABLE' }); setShowModal(true); };
-    const openEdit = (truck) => { setEditingTruck(truck); setForm({ licensePlate: truck.licensePlate || '', model: truck.model || '', capacity: truck.capacity || '', driverAssigned: truck.driverAssigned || '', status: truck.status || 'AVAILABLE' }); setShowModal(true); setActionMenuId(null); };
+    const openCreate = () => { setForm({ licensePlate: '', model: '', capacity: '', driverAssigned: '', status: 'AVAILABLE' }); setShowModal(true); };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSaving(true);
         try {
-            if (editingTruck) { await truckService.updateTruck(editingTruck.id, form); }
-            else { await truckService.createTruck(form); }
+            await truckService.createTruck(form);
             setShowModal(false);
             fetchTrucks();
         } catch (err) { alert(err?.message || 'Error saving truck'); }
         finally { setSaving(false); }
+    };
+
+    const handleStatusChange = async (truck, newStatus) => {
+        try {
+            await truckService.updateTruckStatus(truck.id, { status: newStatus });
+            fetchTrucks();
+        } catch (err) { alert(err?.message || 'Error updating status'); }
+        setActionMenuId(null);
     };
 
     const handleDelete = async (id) => {
@@ -83,7 +88,9 @@ const TruckListPage = () => {
                 </div>
                 <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
                     <option value="">All Status</option>
-                    {Object.entries(TruckStatus).map(([key, val]) => <option key={key} value={val.value}>{val.label}</option>)}
+                    <option value={TruckStatus.AVAILABLE}>{TruckStatusLabels[TruckStatus.AVAILABLE]}</option>
+                    <option value={TruckStatus.IN_USE}>{TruckStatusLabels[TruckStatus.IN_USE]}</option>
+                    <option value={TruckStatus.MAINTENANCE}>{TruckStatusLabels[TruckStatus.MAINTENANCE]}</option>
                 </select>
             </div>
 
@@ -118,8 +125,8 @@ const TruckListPage = () => {
                                     <td className="px-5 py-3.5 text-sm text-slate-600">{truck.model}</td>
                                     <td className="px-5 py-3.5 text-sm text-slate-600">{truck.capacity} tons</td>
                                     <td className="px-5 py-3.5 text-sm text-slate-600">{truck.driverAssigned || <span className="text-slate-400">Not assigned</span>}</td>
-                                    <td className="px-5 py-3.5"><span className={`inline-flex px-2.5 py-0.5 text-xs font-medium rounded-full border ${statusBadge(truck.status)}`}>{TruckStatus[truck.status]?.label || truck.status}</span></td>
-                                    <td className="px-5 py-3.5 text-sm text-slate-500">{formatDate(truck.createdAt || truck.createdDate)}</td>
+                                    <td className="px-5 py-3.5"><span className={`inline-flex px-2.5 py-0.5 text-xs font-medium rounded-full border ${statusBadge(truck.status)}`}>{TruckStatusLabels[truck.status] || truck.status}</span></td>
+                                    <td className="px-5 py-3.5 text-sm text-slate-500">{formatDate(truck.createdAt)}</td>
                                     <td className="px-5 py-3.5 relative">
                                         <button onClick={() => setActionMenuId(actionMenuId === truck.id ? null : truck.id)} className="p-1 text-slate-400 hover:text-slate-600 rounded">
                                             <MoreHorizontal className="w-5 h-5" />
@@ -127,8 +134,17 @@ const TruckListPage = () => {
                                         {actionMenuId === truck.id && (
                                             <>
                                                 <div className="fixed inset-0 z-30" onClick={() => setActionMenuId(null)} />
-                                                <div className="absolute right-4 top-10 bg-white border border-slate-200 rounded-lg shadow-lg py-1 z-40 w-36">
-                                                    <button onClick={() => openEdit(truck)} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"><Pencil className="w-3.5 h-3.5" /> Edit</button>
+                                                <div className="absolute right-4 top-10 bg-white border border-slate-200 rounded-lg shadow-lg py-1 z-40 w-44">
+                                                    {/* Status change options */}
+                                                    {truck.status !== TruckStatus.AVAILABLE && (
+                                                        <button onClick={() => handleStatusChange(truck, TruckStatus.AVAILABLE)} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-emerald-600 hover:bg-emerald-50">Set Available</button>
+                                                    )}
+                                                    {truck.status !== TruckStatus.IN_USE && (
+                                                        <button onClick={() => handleStatusChange(truck, TruckStatus.IN_USE)} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-blue-600 hover:bg-blue-50">Set In Use</button>
+                                                    )}
+                                                    {truck.status !== TruckStatus.MAINTENANCE && (
+                                                        <button onClick={() => handleStatusChange(truck, TruckStatus.MAINTENANCE)} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-amber-600 hover:bg-amber-50">Set Maintenance</button>
+                                                    )}
                                                     <button onClick={() => handleDelete(truck.id)} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50"><Trash2 className="w-3.5 h-3.5" /> Delete</button>
                                                 </div>
                                             </>
@@ -141,13 +157,13 @@ const TruckListPage = () => {
                 )}
             </div>
 
-            {/* Modal */}
+            {/* Create Modal — no edit since backend only supports status updates */}
             {showModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center">
                     <div className="absolute inset-0 bg-black/30" onClick={() => setShowModal(false)} />
                     <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6">
                         <div className="flex items-center justify-between mb-5">
-                            <h2 className="text-lg font-semibold text-slate-900">{editingTruck ? 'Edit Truck' : 'Add New Truck'}</h2>
+                            <h2 className="text-lg font-semibold text-slate-900">Add New Truck</h2>
                             <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600"><X className="w-5 h-5" /></button>
                         </div>
                         <form onSubmit={handleSubmit} className="space-y-4">
@@ -155,14 +171,9 @@ const TruckListPage = () => {
                             <div><label className="block text-sm font-medium text-slate-700 mb-1">Model</label><input value={form.model} onChange={e => setForm({ ...form, model: e.target.value })} required className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400" /></div>
                             <div><label className="block text-sm font-medium text-slate-700 mb-1">Capacity (tons)</label><input type="number" value={form.capacity} onChange={e => setForm({ ...form, capacity: e.target.value })} required className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400" /></div>
                             <div><label className="block text-sm font-medium text-slate-700 mb-1">Driver</label><input value={form.driverAssigned} onChange={e => setForm({ ...form, driverAssigned: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400" /></div>
-                            <div><label className="block text-sm font-medium text-slate-700 mb-1">Status</label>
-                                <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400">
-                                    {Object.entries(TruckStatus).map(([key, val]) => <option key={key} value={val.value}>{val.label}</option>)}
-                                </select>
-                            </div>
                             <div className="flex gap-3 pt-2">
                                 <button type="button" onClick={() => setShowModal(false)} className="flex-1 py-2.5 border border-slate-200 text-sm font-medium text-slate-700 rounded-lg hover:bg-slate-50">Cancel</button>
-                                <button type="submit" disabled={saving} className="flex-1 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">{saving ? 'Saving...' : (editingTruck ? 'Update' : 'Create')}</button>
+                                <button type="submit" disabled={saving} className="flex-1 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">{saving ? 'Saving...' : 'Create'}</button>
                             </div>
                         </form>
                     </div>

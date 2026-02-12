@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, MoreHorizontal, Pencil, Trash2, X, Users as UsersIcon, CheckCircle, XCircle } from 'lucide-react';
+import { Plus, Search, MoreHorizontal, Pencil, Trash2, X, Users as UsersIcon } from 'lucide-react';
 import userService from '@/services/userService';
-import { RoleCode, RoleCodeLabels } from '@/constants/enums';
+import { RoleCode, RoleCodeLabels, UserStatus, UserStatusLabels, UserStatusColors } from '@/constants/enums';
 
 const UserListPage = () => {
     const [users, setUsers] = useState([]);
@@ -14,10 +14,11 @@ const UserListPage = () => {
         username: '',
         password: '',
         fullName: '',
-        phone: '',
-        email: '',
-        role: 'STAFF',
-        active: true
+        phoneNumber: '',
+        address: '',
+        roles: ['APPROVER'],
+        basicSalary: '',
+        advanceMoney: '',
     });
     const [saving, setSaving] = useState(false);
     const [actionMenuId, setActionMenuId] = useState(null);
@@ -25,7 +26,6 @@ const UserListPage = () => {
     const fetchUsers = async () => {
         try {
             const data = await userService.getUsers();
-            // Backend returns { result: [...] } which axios interceptor unwraps to just [...]
             setUsers(Array.isArray(data) ? data : []);
         } catch (err) {
             console.error(err);
@@ -42,9 +42,9 @@ const UserListPage = () => {
         const matchSearch = !search ||
             (u.username?.toLowerCase().includes(term)) ||
             (u.fullName?.toLowerCase().includes(term)) ||
-            (u.email?.toLowerCase().includes(term)) ||
-            (u.phone?.includes(term));
-        const matchRole = !roleFilter || u.role === roleFilter;
+            (u.address?.toLowerCase().includes(term)) ||
+            (u.phoneNumber?.includes(term));
+        const matchRole = !roleFilter || (u.roles && u.roles.includes(roleFilter));
         return matchSearch && matchRole;
     });
 
@@ -60,25 +60,26 @@ const UserListPage = () => {
             username: '',
             password: '',
             fullName: '',
-            phone: '',
-            email: '',
-            role: 'STAFF',
-            active: true
+            phoneNumber: '',
+            address: '',
+            roles: ['APPROVER'],
+            basicSalary: '',
+            advanceMoney: '',
         });
         setShowModal(true);
     };
 
     const openEdit = (user) => {
         setEditingUser(user);
-        // For Update: fullName, phone, email, role, active
         setForm({
-            username: user.username, // Read-only
-            password: '', // Not sent on update
+            username: user.username,
+            password: '',
             fullName: user.fullName || '',
-            phone: user.phone || '',
-            email: user.email || '',
-            role: user.role || 'STAFF',
-            active: user.active
+            phoneNumber: user.phoneNumber || '',
+            address: user.address || '',
+            roles: user.roles || ['APPROVER'],
+            basicSalary: user.basicSalary || '',
+            advanceMoney: user.advanceMoney || '',
         });
         setShowModal(true);
         setActionMenuId(null);
@@ -89,24 +90,25 @@ const UserListPage = () => {
         setSaving(true);
         try {
             if (editingUser) {
-                // Update Payload: { fullName, phone, email, role, active }
+                // UserUpdateRequest: { fullName, phoneNumber, address, roles, basicSalary, advanceMoney }
                 const payload = {
                     fullName: form.fullName,
-                    phone: form.phone,
-                    email: form.email,
-                    role: form.role,
-                    active: form.active
+                    phoneNumber: form.phoneNumber,
+                    address: form.address,
+                    roles: form.roles,
+                    basicSalary: form.basicSalary ? Number(form.basicSalary) : undefined,
+                    advanceMoney: form.advanceMoney ? Number(form.advanceMoney) : undefined,
                 };
-                await userService.updateUser(editingUser.userId, payload);
+                await userService.updateUser(editingUser.id, payload);
             } else {
-                // Create Payload: { username, password, fullName, phone, email, role }
+                // UserCreateRequest: { username, password, fullName, phoneNumber, address, roles }
                 const payload = {
                     username: form.username,
                     password: form.password,
                     fullName: form.fullName,
-                    phone: form.phone,
-                    email: form.email,
-                    role: form.role
+                    phoneNumber: form.phoneNumber,
+                    address: form.address,
+                    roles: form.roles,
                 };
                 await userService.createUser(payload);
             }
@@ -125,13 +127,30 @@ const UserListPage = () => {
         setActionMenuId(null);
     };
 
+    const handleStatusChange = async (user, newStatus) => {
+        try {
+            await userService.updateStatus(user.id, { status: newStatus });
+            fetchUsers();
+        } catch (err) { alert(err?.message || 'Error'); }
+        setActionMenuId(null);
+    };
+
     const roleBadge = (role) => {
         switch (role) {
             case RoleCode.ADMIN: return 'bg-purple-50 text-purple-700 border-purple-200';
             case RoleCode.DRIVER: return 'bg-blue-50 text-blue-700 border-blue-200';
-            case RoleCode.STAFF: return 'bg-slate-50 text-slate-700 border-slate-200';
+            case RoleCode.APPROVER: return 'bg-slate-50 text-slate-700 border-slate-200';
             default: return 'bg-gray-50 text-gray-600 border-gray-200';
         }
+    };
+
+    const statusBadge = (status) => {
+        return UserStatusColors[status] || 'bg-slate-100 text-slate-600 border-slate-200';
+    };
+
+    const getPrimaryRole = (roles) => {
+        if (!roles || !Array.isArray(roles) || roles.length === 0) return '-';
+        return roles[0];
     };
 
     return (
@@ -152,7 +171,7 @@ const UserListPage = () => {
                     <input
                         value={search}
                         onChange={e => setSearch(e.target.value)}
-                        placeholder="Search by name, email, or phone..."
+                        placeholder="Search by name, address, or phone..."
                         className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"
                     />
                 </div>
@@ -164,7 +183,7 @@ const UserListPage = () => {
                     <option value="">All Roles</option>
                     <option value={RoleCode.ADMIN}>Admin</option>
                     <option value={RoleCode.DRIVER}>Driver</option>
-                    <option value={RoleCode.STAFF}>Staff</option>
+                    <option value={RoleCode.APPROVER}>Approver</option>
                 </select>
             </div>
 
@@ -193,8 +212,8 @@ const UserListPage = () => {
                         </thead>
                         <tbody className="divide-y divide-slate-100">
                             {filtered.map(user => (
-                                <tr key={user.userId} className="hover:bg-slate-50/50 transition-colors">
-                                    <td className="px-5 py-4 text-sm text-slate-500">#{user.userId}</td>
+                                <tr key={user.id} className="hover:bg-slate-50/50 transition-colors">
+                                    <td className="px-5 py-4 text-sm text-slate-500">#{user.id}</td>
                                     <td className="px-5 py-4">
                                         <div className="flex items-center gap-3">
                                             <div className="w-9 h-9 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center text-sm font-bold shadow-sm">
@@ -208,42 +227,53 @@ const UserListPage = () => {
                                     </td>
                                     <td className="px-5 py-4">
                                         <div className="flex flex-col">
-                                            <span className="text-sm text-slate-600">{user.email}</span>
-                                            <span className="text-xs text-slate-400">{user.phone}</span>
+                                            <span className="text-sm text-slate-600">{user.address || '-'}</span>
+                                            <span className="text-xs text-slate-400">{user.phoneNumber || '-'}</span>
                                         </div>
                                     </td>
                                     <td className="px-5 py-4">
-                                        <span className={`inline-flex px-2.5 py-1 text-xs font-medium rounded-full border ${roleBadge(user.role)}`}>
-                                            {user.role}
+                                        <span className={`inline-flex px-2.5 py-1 text-xs font-medium rounded-full border ${roleBadge(getPrimaryRole(user.roles))}`}>
+                                            {RoleCodeLabels[getPrimaryRole(user.roles)] || getPrimaryRole(user.roles)}
                                         </span>
                                     </td>
                                     <td className="px-5 py-4">
-                                        {user.active ? (
-                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Active
-                                            </span>
-                                        ) : (
-                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-slate-400" /> Inactive
-                                            </span>
-                                        )}
+                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${statusBadge(user.status)}`}>
+                                            <div className={`w-1.5 h-1.5 rounded-full ${user.status === UserStatus.AVAILABLE ? 'bg-emerald-500' : user.status === UserStatus.BUSY ? 'bg-amber-500' : 'bg-slate-400'}`} />
+                                            {UserStatusLabels[user.status] || user.status || 'Unknown'}
+                                        </span>
                                     </td>
                                     <td className="px-5 py-4 text-sm text-slate-500">{formatDate(user.createdAt)}</td>
                                     <td className="px-5 py-4 relative">
                                         <button
-                                            onClick={() => setActionMenuId(actionMenuId === user.userId ? null : user.userId)}
+                                            onClick={() => setActionMenuId(actionMenuId === user.id ? null : user.id)}
                                             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
                                         >
                                             <MoreHorizontal className="w-5 h-5" />
                                         </button>
-                                        {actionMenuId === user.userId && (
+                                        {actionMenuId === user.id && (
                                             <>
                                                 <div className="fixed inset-0 z-30" onClick={() => setActionMenuId(null)} />
-                                                <div className="absolute right-0 top-10 bg-white border border-slate-200 rounded-lg shadow-lg py-1 z-40 w-40">
+                                                <div className="absolute right-0 top-10 bg-white border border-slate-200 rounded-lg shadow-lg py-1 z-40 w-44">
                                                     <button onClick={() => openEdit(user)} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50">
                                                         <Pencil className="w-4 h-4" /> Edit User
                                                     </button>
-                                                    <button onClick={() => handleDelete(user.userId)} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50">
+                                                    {/* Status change options */}
+                                                    {user.status !== UserStatus.AVAILABLE && (
+                                                        <button onClick={() => handleStatusChange(user, UserStatus.AVAILABLE)} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-emerald-600 hover:bg-emerald-50">
+                                                            Set Available
+                                                        </button>
+                                                    )}
+                                                    {user.status !== UserStatus.BUSY && (
+                                                        <button onClick={() => handleStatusChange(user, UserStatus.BUSY)} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-amber-600 hover:bg-amber-50">
+                                                            Set Busy
+                                                        </button>
+                                                    )}
+                                                    {user.status !== UserStatus.OFFLINE && (
+                                                        <button onClick={() => handleStatusChange(user, UserStatus.OFFLINE)} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50">
+                                                            Set Offline
+                                                        </button>
+                                                    )}
+                                                    <button onClick={() => handleDelete(user.id)} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50">
                                                         <Trash2 className="w-4 h-4" /> Delete User
                                                     </button>
                                                 </div>
@@ -311,21 +341,19 @@ const UserListPage = () => {
 
                                 <div className="grid grid-cols-2 gap-5">
                                     <div className="col-span-2 sm:col-span-1">
-                                        <label className="block text-sm font-semibold text-slate-700 mb-1.5">Email <span className="text-red-500">*</span></label>
+                                        <label className="block text-sm font-semibold text-slate-700 mb-1.5">Address</label>
                                         <input
-                                            type="email"
-                                            value={form.email}
-                                            onChange={e => setForm({ ...form, email: e.target.value })}
-                                            required
-                                            placeholder="john@example.com"
+                                            value={form.address}
+                                            onChange={e => setForm({ ...form, address: e.target.value })}
+                                            placeholder="123 Main St, HCMC"
                                             className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                                         />
                                     </div>
                                     <div className="col-span-2 sm:col-span-1">
                                         <label className="block text-sm font-semibold text-slate-700 mb-1.5">Phone Number</label>
                                         <input
-                                            value={form.phone}
-                                            onChange={e => setForm({ ...form, phone: e.target.value })}
+                                            value={form.phoneNumber}
+                                            onChange={e => setForm({ ...form, phoneNumber: e.target.value })}
                                             placeholder="0909123456"
                                             className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                                         />
@@ -335,28 +363,38 @@ const UserListPage = () => {
                                 <div>
                                     <label className="block text-sm font-semibold text-slate-700 mb-1.5">Role <span className="text-red-500">*</span></label>
                                     <select
-                                        value={form.role}
-                                        onChange={e => setForm({ ...form, role: e.target.value })}
+                                        value={form.roles[0] || ''}
+                                        onChange={e => setForm({ ...form, roles: [e.target.value] })}
                                         className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                                     >
-                                        <option value={RoleCode.STAFF}>Staff</option>
+                                        <option value={RoleCode.APPROVER}>Approver</option>
                                         <option value={RoleCode.DRIVER}>Driver</option>
                                         <option value={RoleCode.ADMIN}>Admin</option>
                                     </select>
                                 </div>
 
                                 {editingUser && (
-                                    <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
-                                        <input
-                                            type="checkbox"
-                                            id="active"
-                                            checked={form.active}
-                                            onChange={e => setForm({ ...form, active: e.target.checked })}
-                                            className="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
-                                        />
-                                        <label htmlFor="active" className="text-sm font-medium text-slate-700 select-none cursor-pointer">
-                                            Active Status
-                                        </label>
+                                    <div className="grid grid-cols-2 gap-5">
+                                        <div>
+                                            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Basic Salary</label>
+                                            <input
+                                                type="number"
+                                                value={form.basicSalary}
+                                                onChange={e => setForm({ ...form, basicSalary: e.target.value })}
+                                                placeholder="0"
+                                                className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Advance Money</label>
+                                            <input
+                                                type="number"
+                                                value={form.advanceMoney}
+                                                onChange={e => setForm({ ...form, advanceMoney: e.target.value })}
+                                                placeholder="0"
+                                                className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                                            />
+                                        </div>
                                     </div>
                                 )}
 

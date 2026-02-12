@@ -3,12 +3,62 @@ import authService from '@/services/authService';
 
 const AuthContext = createContext(null);
 
+/**
+ * Decode a JWT payload without a library.
+ * Returns the parsed JSON payload, or null on failure.
+ */
+function decodeJwtPayload(token) {
+    try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(
+            atob(base64)
+                .split('')
+                .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+                .join('')
+        );
+        return JSON.parse(jsonPayload);
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Extract user info from a JWT payload.
+ * Backend JWT claims structure:
+ *   { sub: "username", roles: ["ADMIN","DRIVER"], permissions: ["READ","WRITE"], iat, exp, jti }
+ * Note: "roles" is a JSON array, NOT a space-separated "scope" string.
+ */
+function extractUserFromToken(token) {
+    const payload = decodeJwtPayload(token);
+    if (!payload) return null;
+
+    return {
+        username: payload.sub,
+        // roles comes as an array: ["ADMIN", "DRIVER"]
+        roles: Array.isArray(payload.roles) ? payload.roles : [],
+        // permissions comes as an array: ["READ", "WRITE"]
+        permissions: Array.isArray(payload.permissions) ? payload.permissions : [],
+        tokenExp: payload.exp,
+    };
+}
+
+/**
+ * Check if a JWT token is expired (client-side only, no backend call needed)
+ */
+function isTokenExpired(token) {
+    const payload = decodeJwtPayload(token);
+    if (!payload?.exp) return true;
+    // exp is in seconds, Date.now() is in ms
+    return Date.now() >= payload.exp * 1000;
+}
+
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
 
-    // On mount: check if we have a stored token and try to load user info
+    // On mount: check stored token validity (client-side)
     useEffect(() => {
         initializeAuth();
     }, []);
@@ -20,50 +70,57 @@ export const AuthProvider = ({ children }) => {
             return;
         }
 
-        try {
-            const userInfo = await authService.getMyInfo();
-            setUser(userInfo);
-            setIsAuthenticated(true);
-        } catch (error) {
-            // Token is invalid or expired — clean up
+        // Client-side token expiry check (no introspect endpoint exists)
+        if (isTokenExpired(token)) {
+            // Token expired — clear everything
             localStorage.removeItem('accessToken');
             localStorage.removeItem('user');
-            setUser(null);
-            setIsAuthenticated(false);
-        } finally {
             setIsLoading(false);
+            return;
         }
+
+        // Token is still valid — decode user info
+        const userInfo = extractUserFromToken(token);
+        if (userInfo) {
+            // Merge with any cached extra info
+            const cached = localStorage.getItem('user');
+            const cachedUser = cached ? JSON.parse(cached) : {};
+            setUser({ ...cachedUser, ...userInfo });
+            setIsAuthenticated(true);
+        } else {
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('user');
+        }
+        setIsLoading(false);
     };
 
     const login = useCallback(async (credentials) => {
         // authService.login returns the unwrapped `result` from ApiResponse
-        // Backend returns: { accessToken: "eyJ..." }
+        // Backend returns AuthResponse: { token: "jwt_string" }
         const data = await authService.login(credentials);
 
-        // Extract the accessToken from the response
-        const token = data?.accessToken || data?.token;
+        const token = data?.token || data?.accessToken;
         if (!token) {
-            throw { code: 0, message: 'Không nhận được token từ máy chủ' };
+            throw { code: 0, message: 'No token received from server' };
         }
         localStorage.setItem('accessToken', token);
 
-        // Fetch user info after login
-        try {
-            const userInfo = await authService.getMyInfo();
-            setUser(userInfo);
-            localStorage.setItem('user', JSON.stringify(userInfo));
-        } catch {
-            // If getMyInfo fails, still set authenticated with basic info
-            const basicUser = { username: credentials.username };
-            setUser(basicUser);
-            localStorage.setItem('user', JSON.stringify(basicUser));
-        }
-
+        // Decode JWT to extract user info
+        // JWT payload: { sub, roles: ["ADMIN"], permissions: ["READ"], exp, iat, jti }
+        const userInfo = extractUserFromToken(token) || { username: credentials.username, roles: [] };
+        setUser(userInfo);
+        localStorage.setItem('user', JSON.stringify(userInfo));
         setIsAuthenticated(true);
         return data;
     }, []);
 
-    const logout = useCallback(() => {
+    const logout = useCallback(async () => {
+        const token = localStorage.getItem('accessToken');
+        try {
+            if (token) await authService.logout(token);
+        } catch {
+            // Ignore logout errors
+        }
         localStorage.removeItem('accessToken');
         localStorage.removeItem('user');
         setUser(null);

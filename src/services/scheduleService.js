@@ -1,35 +1,34 @@
 import axiosInstance from '@/api/axiosInstance';
 
 const scheduleService = {
-    // GET /schedule/viewSchedule
-    getAllSchedules: async (params) => {
-        const data = await axiosInstance.get('/schedule/viewSchedule', { params });
+    // GET /schedule/viewSchedule → List<ScheduleResponse>
+    getAllSchedules: async () => {
+        const data = await axiosInstance.get('/schedule/viewSchedule');
         return Array.isArray(data) ? data : [];
     },
 
-    getScheduleById: (id) => axiosInstance.get(`/schedule/viewSchedule/${id}`),
-
     // POST /schedule/createSchedule
+    // Body: ScheduleCreateRequest { userId, truckId, routeId, departureDate }
     createSchedule: (data) => axiosInstance.post('/schedule/createSchedule', data),
 
-    // PUT /schedule/updateSchedule/{ScheduleId}
+    // PUT /schedule/updateSchedule/{scheduleId}
+    // Body: ScheduleUpdateRequest { userId, truckId, routeId, departureDate }
     updateSchedule: (id, data) => axiosInstance.put(`/schedule/updateSchedule/${id}`, data),
 
-    // GET /schedule/approveSchedule/{ScheduleId} -> Note: Docs say GET? Unusual for state change.
-    // Spec: GET /approveSchedule/{ScheduleId}
-    // But previous code used PUT body. I will follow spec: GET.
+    // GET /schedule/approveSchedule/{scheduleId} — NO request body!
     approveSchedule: (id) => axiosInstance.get(`/schedule/approveSchedule/${id}`),
 
-    // GET /schedule/rejectSchedule/{ScheduleId}
+    // GET /schedule/rejectSchedule/{scheduleId} — NO request body!
     rejectSchedule: (id) => axiosInstance.get(`/schedule/rejectSchedule/${id}`),
 
-    // PUT /schedule/endSchedule/{ScheduleId}
-    endSchedule: (id) => axiosInstance.put(`/schedule/endSchedule/${id}`),
-
-    // GET /schedule/cancelSchedule/{ScheduleId}
+    // GET /schedule/cancelSchedule/{scheduleId} — NO request body!
     cancelSchedule: (id) => axiosInstance.get(`/schedule/cancelSchedule/${id}`),
 
-    // DELETE /schedule/deleteSchedule/{ScheduleId}
+    // PUT /schedule/endSchedule/{scheduleId}
+    // Body: ScheduleEndRequest { actualArrivalTime, note }
+    endSchedule: (id, data) => axiosInstance.put(`/schedule/endSchedule/${id}`, data),
+
+    // DELETE /schedule/deleteSchedule/{scheduleId}
     deleteSchedule: (id) => axiosInstance.delete(`/schedule/deleteSchedule/${id}`),
 };
 

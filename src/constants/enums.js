@@ -3,17 +3,35 @@
 // Do NOT use hardcoded strings elsewhere — always import from this file.
 
 // ─── Role Codes ───
-// ─── Role Codes ───
 export const RoleCode = Object.freeze({
     ADMIN: 'ADMIN',
     DRIVER: 'DRIVER',
-    STAFF: 'STAFF',
+    APPROVER: 'APPROVER',
 });
 
 export const RoleCodeLabels = Object.freeze({
     [RoleCode.ADMIN]: 'Admin',
     [RoleCode.DRIVER]: 'Driver',
-    [RoleCode.STAFF]: 'Staff',
+    [RoleCode.APPROVER]: 'Approver',
+});
+
+// ─── User Status ───
+export const UserStatus = Object.freeze({
+    AVAILABLE: 'AVAILABLE',
+    BUSY: 'BUSY',
+    OFFLINE: 'OFFLINE',
+});
+
+export const UserStatusLabels = Object.freeze({
+    [UserStatus.AVAILABLE]: 'Available',
+    [UserStatus.BUSY]: 'Busy',
+    [UserStatus.OFFLINE]: 'Offline',
+});
+
+export const UserStatusColors = Object.freeze({
+    [UserStatus.AVAILABLE]: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    [UserStatus.BUSY]: 'bg-amber-50 text-amber-700 border-amber-200',
+    [UserStatus.OFFLINE]: 'bg-slate-100 text-slate-600 border-slate-200',
 });
 
 // ─── Truck Status ───
@@ -21,40 +39,37 @@ export const TruckStatus = Object.freeze({
     AVAILABLE: 'AVAILABLE',
     IN_USE: 'IN_USE',
     MAINTENANCE: 'MAINTENANCE',
-    RETIRED: 'RETIRED',
 });
 
 export const TruckStatusLabels = Object.freeze({
-    [TruckStatus.AVAILABLE]: 'Sẵn sàng',
-    [TruckStatus.IN_USE]: 'Đang sử dụng',
-    [TruckStatus.MAINTENANCE]: 'Bảo trì',
-    [TruckStatus.RETIRED]: 'Ngừng hoạt động',
+    [TruckStatus.AVAILABLE]: 'Available',
+    [TruckStatus.IN_USE]: 'In Use',
+    [TruckStatus.MAINTENANCE]: 'Maintenance',
 });
 
 export const TruckStatusColors = Object.freeze({
     [TruckStatus.AVAILABLE]: 'bg-emerald-100 text-emerald-800',
     [TruckStatus.IN_USE]: 'bg-blue-100 text-blue-800',
     [TruckStatus.MAINTENANCE]: 'bg-amber-100 text-amber-800',
-    [TruckStatus.RETIRED]: 'bg-slate-100 text-slate-800',
 });
 
 // ─── Schedule Status ───
 export const ScheduleStatus = Object.freeze({
-    CREATED: 'CREATED',
-    RUNNING: 'RUNNING',
-    COMPLETED: 'COMPLETED',
+    WAITING: 'WAITING',
+    DELIVERING: 'DELIVERING',
+    DONE: 'DONE',
 });
 
 export const ScheduleStatusLabels = Object.freeze({
-    [ScheduleStatus.CREATED]: 'Đã tạo',
-    [ScheduleStatus.RUNNING]: 'Đang chạy',
-    [ScheduleStatus.COMPLETED]: 'Hoàn thành',
+    [ScheduleStatus.WAITING]: 'Waiting',
+    [ScheduleStatus.DELIVERING]: 'Delivering',
+    [ScheduleStatus.DONE]: 'Done',
 });
 
 export const ScheduleStatusColors = Object.freeze({
-    [ScheduleStatus.CREATED]: 'bg-amber-100 text-amber-800',
-    [ScheduleStatus.RUNNING]: 'bg-blue-100 text-blue-800',
-    [ScheduleStatus.COMPLETED]: 'bg-emerald-100 text-emerald-800',
+    [ScheduleStatus.WAITING]: 'bg-amber-100 text-amber-800',
+    [ScheduleStatus.DELIVERING]: 'bg-blue-100 text-blue-800',
+    [ScheduleStatus.DONE]: 'bg-emerald-100 text-emerald-800',
 });
 
 // ─── Approve Status ───
@@ -65,9 +80,9 @@ export const ApproveStatus = Object.freeze({
 });
 
 export const ApproveStatusLabels = Object.freeze({
-    [ApproveStatus.PENDING]: 'Chờ duyệt',
-    [ApproveStatus.APPROVED]: 'Đã duyệt',
-    [ApproveStatus.REJECTED]: 'Từ chối',
+    [ApproveStatus.PENDING]: 'Pending',
+    [ApproveStatus.APPROVED]: 'Approved',
+    [ApproveStatus.REJECTED]: 'Rejected',
 });
 
 export const ApproveStatusColors = Object.freeze({
@@ -76,17 +91,29 @@ export const ApproveStatusColors = Object.freeze({
     [ApproveStatus.REJECTED]: 'bg-red-100 text-red-800',
 });
 
-// ─── Cost Type ───
-export const CostType = Object.freeze({
-    FUEL: 'FUEL',
-    TOLL: 'TOLL',
-    REPAIR: 'REPAIR',
-    OTHER: 'OTHER',
+// ─── Transaction Type ───
+export const TransactionType = Object.freeze({
+    IMPORT: 'IMPORT',
+    EXPORT: 'EXPORT',
 });
 
-export const CostTypeLabels = Object.freeze({
-    [CostType.FUEL]: 'Nhiên liệu',
-    [CostType.TOLL]: 'Phí đường bộ',
-    [CostType.REPAIR]: 'Sửa chữa',
-    [CostType.OTHER]: 'Khác',
+export const TransactionTypeLabels = Object.freeze({
+    [TransactionType.IMPORT]: 'Import',
+    [TransactionType.EXPORT]: 'Export',
+});
+
+// ─── Salary Report Status ───
+export const SalaryReportStatus = Object.freeze({
+    PROCESSING: 'PROCESSING',
+    DONE: 'DONE',
+});
+
+export const SalaryReportStatusLabels = Object.freeze({
+    [SalaryReportStatus.PROCESSING]: 'Processing',
+    [SalaryReportStatus.DONE]: 'Done',
+});
+
+export const SalaryReportStatusColors = Object.freeze({
+    [SalaryReportStatus.PROCESSING]: 'bg-amber-100 text-amber-800',
+    [SalaryReportStatus.DONE]: 'bg-emerald-100 text-emerald-800',
 });

@@ -1,15 +1,17 @@
 import axiosInstance from '@/api/axiosInstance';
 
 const productService = {
-    // GET /product/viewProduct
-    getProducts: async (params) => {
-        const data = await axiosInstance.get('/product/viewProduct', { params });
+    // GET /product/viewProduct → List<ProductResponse>
+    getProducts: async () => {
+        const data = await axiosInstance.get('/product/viewProduct');
         return Array.isArray(data) ? data : [];
     },
 
-    getProductById: (id) => axiosInstance.get(`/product/viewProduct/${id}`),
+    // GET /product/findProduct/{productId}
+    getProductById: (id) => axiosInstance.get(`/product/findProduct/${id}`),
 
     // POST /product/createProduct
+    // Body: ProductCreateRequest { name, categoryId, price }
     createProduct: (data) => axiosInstance.post('/product/createProduct', data),
 
     // PUT /product/updateProduct/{productId}

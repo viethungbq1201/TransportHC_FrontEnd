@@ -1,9 +1,9 @@
 import axiosInstance from '@/api/axiosInstance';
 
 const inventoryService = {
-    // GET /inventory/viewInventory
-    getInventories: async (params) => {
-        const data = await axiosInstance.get('/inventory/viewInventory', { params });
+    // GET /inventory/viewInventory → List<InventoryResponse>
+    getInventories: async () => {
+        const data = await axiosInstance.get('/inventory/viewInventory');
         return Array.isArray(data) ? data : [];
     },
 
@@ -11,6 +11,7 @@ const inventoryService = {
     getInventoryById: (id) => axiosInstance.get(`/inventory/findInventory/${id}`),
 
     // POST /inventory/createInventory
+    // Body: InventoryCreateRequest { productId }
     createInventory: (data) => axiosInstance.post('/inventory/createInventory', data),
 
     // PUT /inventory/updateInventory/{inventoryId}

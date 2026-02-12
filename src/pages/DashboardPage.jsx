@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Truck, TrendingUp, Calendar, DollarSign, Package, BarChart3, AlertTriangle } from 'lucide-react';
 import truckService from '@/services/truckService';
 import scheduleService from '@/services/scheduleService';
-import reportService from '@/services/reportService';
 
 const StatCard = ({ title, value, icon: Icon, color, subtitle }) => (
     <div className="bg-white rounded-xl border border-slate-200 p-5">
@@ -37,12 +36,10 @@ const DashboardPage = () => {
                 const results = await Promise.allSettled([
                     truckService.getAllTrucks(),
                     scheduleService.getAllSchedules(),
-                    reportService.getTruckCostReport(),
                 ]);
 
                 const trucks = results[0].status === 'fulfilled' ? (results[0].value || []) : [];
                 const schedules = results[1].status === 'fulfilled' ? (results[1].value || []) : [];
-                const costReport = results[2].status === 'fulfilled' ? (results[2].value || []) : [];
 
                 const truckList = Array.isArray(trucks) ? trucks : [];
                 const scheduleList = Array.isArray(schedules) ? schedules : [];

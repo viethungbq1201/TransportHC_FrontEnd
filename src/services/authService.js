@@ -4,8 +4,9 @@ const authService = {
     /**
      * Login with username and password
      * POST /auth/login
+     * Backend returns AuthResponse: { token: "jwt_string" }
      * @param {{ username: string, password: string }} credentials
-     * @returns {Promise<{ accessToken: string }>}
+     * @returns {Promise<{ token: string }>}
      */
     login: async (credentials) => {
         const response = await axiosInstance.post('/auth/login', {
@@ -14,8 +15,27 @@ const authService = {
         });
         return response;
     },
-    // No getMyInfo endpoint in API docs. User info is returned in login response.
 
+    /**
+     * Logout (invalidate token)
+     * POST /auth/logout
+     * @param {string} token
+     * @returns {Promise<void>}
+     */
+    logout: async (token) => {
+        await axiosInstance.post('/auth/logout', { token });
+    },
+
+    /**
+     * Refresh token — returns a new JWT
+     * POST /auth/refresh
+     * @param {string} token
+     * @returns {Promise<{ token: string }>}
+     */
+    refresh: async (token) => {
+        const response = await axiosInstance.post('/auth/refresh', { token });
+        return response;
+    },
 };
 
 export default authService;

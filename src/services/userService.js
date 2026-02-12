@@ -1,35 +1,26 @@
 import axiosInstance from '@/api/axiosInstance';
 
 const userService = {
-    // GET /user/viewUser
-    getUsers: async (params) => {
-        const data = await axiosInstance.get('/user/viewUser', { params });
-        // Map backend ACTIVE/INACTIVE to boolean for UI
-        return Array.isArray(data) ? data.map(u => ({
-            ...u,
-            active: u.status === 'ACTIVE'
-        })) : [];
+    // GET /user/viewUser → List<UserResponse>
+    getUsers: async () => {
+        const data = await axiosInstance.get('/user/viewUser');
+        return Array.isArray(data) ? data : [];
     },
 
-    getUserById: (id) => axiosInstance.get(`/user/viewUser/${id}`), // Assuming viewUser/{id} exists or filter list? Docs say list. Assuming standard GET by ID pattern usually exists or client filtering. Docs didn't specify getById strictly.
-
     // POST /user/createUser
-    createUser: (data) => axiosInstance.post('/user/createUser', {
-        ...data,
-        status: data.active ? 'ACTIVE' : 'INACTIVE'
-    }),
+    // Body: UserCreateRequest { username, password, fullName, phoneNumber, address, roles: ["ADMIN"] }
+    createUser: (data) => axiosInstance.post('/user/createUser', data),
 
     // PUT /user/updateUser/{userId}
-    updateUser: (id, data) => axiosInstance.put(`/user/updateUser/${id}`, {
-        ...data,
-        status: data.active ? 'ACTIVE' : 'INACTIVE'
-    }),
+    // Body: UserUpdateRequest { fullName, phoneNumber, address, roles: ["ADMIN"], basicSalary, advanceMoney }
+    updateUser: (id, data) => axiosInstance.put(`/user/updateUser/${id}`, data),
+
+    // PUT /user/updateStatusUser/{userId}
+    // Body: UserUpdateStatusRequest { status: "AVAILABLE"|"BUSY"|"OFFLINE" }
+    updateStatus: (id, data) => axiosInstance.put(`/user/updateStatusUser/${id}`, data),
 
     // DELETE /user/deleteUser/{userId}
     deleteUser: (id) => axiosInstance.delete(`/user/deleteUser/${id}`),
-
-    // PUT /user/updateStatusUser/{userId}
-    updateStatus: (id, status) => axiosInstance.put(`/user/updateStatusUser/${id}`, { status }),
 };
 
 export default userService;
