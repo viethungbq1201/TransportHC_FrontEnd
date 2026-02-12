@@ -4,26 +4,98 @@ import { useAuth } from '@/context/AuthContext';
 import {
     LayoutDashboard, Users, Truck, Route, FolderTree, Package,
     Warehouse, FileText, CalendarClock, Tag, DollarSign, ClipboardList,
-    BarChart3, Search, Bell, ChevronLeft, ChevronDown, LogOut, Settings,
-    Menu, X
+    BarChart3, Search, Bell, ChevronLeft, ChevronDown, ChevronRight, LogOut, Settings,
+    Menu, X, ListOrdered
 } from 'lucide-react';
 
+/* ──── Navigation structure ──── */
 const navItems = [
     { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { path: '/users', label: 'User Management', icon: Users },
-    { path: '/trucks', label: 'Truck Management', icon: Truck },
-    { path: '/routes', label: 'Route Management', icon: Route },
-    { path: '/categories', label: 'Category Management', icon: FolderTree },
-    { path: '/products', label: 'Product Management', icon: Package },
-    { path: '/inventory', label: 'Inventory Management', icon: Warehouse },
-    { path: '/transactions', label: 'Transaction Management', icon: FileText },
-    { path: '/schedules', label: 'Schedule Management', icon: CalendarClock },
-    { path: '/cost-types', label: 'Cost Type', icon: Tag },
-    { path: '/costs', label: 'Cost Management', icon: DollarSign },
-    { path: '/salary-reports', label: 'Salary Report', icon: ClipboardList },
-    { path: '/reports', label: 'Reports', icon: BarChart3 },
+    { path: '/users', label: 'Users', icon: Users },
+    { path: '/trucks', label: 'Trucks', icon: Truck },
+    { path: '/routes', label: 'Routes', icon: Route },
+    {
+        label: 'Products', icon: Package,
+        children: [
+            { path: '/categories', label: 'Categories', icon: FolderTree },
+            { path: '/products', label: 'Products', icon: Package },
+        ],
+    },
+    { path: '/inventory', label: 'Inventory', icon: Warehouse },
+    {
+        label: 'Transactions', icon: FileText,
+        children: [
+            { path: '/transactions', label: 'Transactions', icon: FileText },
+            { path: '/transaction-details', label: 'Transaction Details', icon: ListOrdered },
+        ],
+    },
+    { path: '/schedules', label: 'Schedules', icon: CalendarClock },
+    {
+        label: 'Costs', icon: DollarSign,
+        children: [
+            { path: '/cost-types', label: 'Cost Types', icon: Tag },
+            { path: '/costs', label: 'Costs', icon: DollarSign },
+        ],
+    },
+    {
+        label: 'Reports', icon: BarChart3,
+        children: [
+            { path: '/salary-reports', label: 'Salary Reports', icon: ClipboardList },
+            { path: '/reports', label: 'Reports', icon: BarChart3 },
+        ],
+    },
 ];
 
+/* ──── Sidebar nav item (leaf) ──── */
+const NavLink = ({ path, label, icon: Icon, collapsed, onMobileClose }) => {
+    const location = useLocation();
+    const isActive = location.pathname === path || location.pathname.startsWith(path + '/');
+    return (
+        <Link
+            to={path}
+            onClick={onMobileClose}
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150
+                ${isActive ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}
+        >
+            <Icon className="w-5 h-5 flex-shrink-0" />
+            {!collapsed && <span className="truncate">{label}</span>}
+        </Link>
+    );
+};
+
+/* ──── Sidebar group (dropdown) ──── */
+const NavGroup = ({ label, icon: Icon, children, collapsed, onMobileClose }) => {
+    const location = useLocation();
+    const isChildActive = children.some(c => location.pathname === c.path || location.pathname.startsWith(c.path + '/'));
+    const [open, setOpen] = useState(isChildActive);
+
+    return (
+        <div>
+            <button
+                onClick={() => setOpen(!open)}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150
+                    ${isChildActive ? 'text-indigo-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}
+            >
+                <Icon className="w-5 h-5 flex-shrink-0" />
+                {!collapsed && (
+                    <>
+                        <span className="truncate flex-1 text-left">{label}</span>
+                        <ChevronRight className={`w-4 h-4 transition-transform duration-200 ${open ? 'rotate-90' : ''}`} />
+                    </>
+                )}
+            </button>
+            {!collapsed && open && (
+                <div className="ml-4 pl-3 border-l border-slate-200 mt-0.5 space-y-0.5">
+                    {children.map(child => (
+                        <NavLink key={child.path} {...child} collapsed={false} onMobileClose={onMobileClose} />
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
+/* ──── Layout ──── */
 const AppLayout = ({ children }) => {
     const location = useLocation();
     const { user, logout } = useAuth();
@@ -31,7 +103,7 @@ const AppLayout = ({ children }) => {
     const [mobileOpen, setMobileOpen] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
 
-    const isActive = (path) => location.pathname === path || location.pathname.startsWith(path + '/');
+    const closeMobile = () => setMobileOpen(false);
 
     const SidebarContent = () => (
         <div className="flex flex-col h-full">
@@ -45,21 +117,13 @@ const AppLayout = ({ children }) => {
 
             {/* Navigation */}
             <nav className="flex-1 overflow-y-auto py-3 px-3 space-y-1">
-                {navItems.map(({ path, label, icon: Icon }) => (
-                    <Link
-                        key={path}
-                        to={path}
-                        onClick={() => setMobileOpen(false)}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150
-              ${isActive(path)
-                                ? 'bg-indigo-50 text-indigo-700'
-                                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-                            }`}
-                    >
-                        <Icon className="w-5 h-5 flex-shrink-0" />
-                        {!collapsed && <span className="truncate">{label}</span>}
-                    </Link>
-                ))}
+                {navItems.map((item) =>
+                    item.children ? (
+                        <NavGroup key={item.label} {...item} collapsed={collapsed} onMobileClose={closeMobile} />
+                    ) : (
+                        <NavLink key={item.path} {...item} collapsed={collapsed} onMobileClose={closeMobile} />
+                    )
+                )}
             </nav>
 
             {/* Collapse button */}
@@ -83,7 +147,7 @@ const AppLayout = ({ children }) => {
             {/* Mobile Sidebar Overlay */}
             {mobileOpen && (
                 <div className="fixed inset-0 z-50 lg:hidden">
-                    <div className="absolute inset-0 bg-black/30" onClick={() => setMobileOpen(false)} />
+                    <div className="absolute inset-0 bg-black/30" onClick={closeMobile} />
                     <aside className="absolute left-0 top-0 bottom-0 w-[260px] bg-white shadow-xl">
                         <SidebarContent />
                     </aside>
@@ -94,12 +158,10 @@ const AppLayout = ({ children }) => {
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
                 <header className="bg-white border-b border-slate-200 px-6 py-3 flex items-center gap-4">
-                    {/* Mobile menu button */}
                     <button onClick={() => setMobileOpen(true)} className="lg:hidden p-1.5 text-slate-500 hover:text-slate-700">
                         <Menu className="w-5 h-5" />
                     </button>
 
-                    {/* Search */}
                     <div className="flex-1 max-w-lg">
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -112,13 +174,11 @@ const AppLayout = ({ children }) => {
                     </div>
 
                     <div className="flex items-center gap-3 ml-auto">
-                        {/* Notification bell */}
                         <button className="relative p-2 text-slate-400 hover:text-slate-600 transition-colors">
                             <Bell className="w-5 h-5" />
                             <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">3</span>
                         </button>
 
-                        {/* User profile */}
                         <div className="relative">
                             <button
                                 onClick={() => setProfileOpen(!profileOpen)}

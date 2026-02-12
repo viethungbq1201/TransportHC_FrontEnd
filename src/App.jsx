@@ -17,6 +17,7 @@ import CategoryListPage from '@/pages/CategoryListPage';
 import ProductListPage from '@/pages/ProductListPage';
 import InventoryListPage from '@/pages/InventoryListPage';
 import TransactionListPage from '@/pages/TransactionListPage';
+import TransactionDetailListPage from '@/pages/TransactionDetailListPage';
 import ScheduleListPage from '@/pages/ScheduleListPage';
 import CostTypeListPage from '@/pages/CostTypeListPage';
 import CostListPage from '@/pages/CostListPage';
@@ -42,6 +43,7 @@ function App() {
                             <Route element={<AppLayout><ProductListPage /></AppLayout>} path="/products" />
                             <Route element={<AppLayout><InventoryListPage /></AppLayout>} path="/inventory" />
                             <Route element={<AppLayout><TransactionListPage /></AppLayout>} path="/transactions" />
+                            <Route element={<AppLayout><TransactionDetailListPage /></AppLayout>} path="/transaction-details" />
                             <Route element={<AppLayout><ScheduleListPage /></AppLayout>} path="/schedules" />
                             <Route element={<AppLayout><CostTypeListPage /></AppLayout>} path="/cost-types" />
                             <Route element={<AppLayout><CostListPage /></AppLayout>} path="/costs" />
