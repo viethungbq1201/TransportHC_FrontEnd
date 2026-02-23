@@ -5,14 +5,16 @@
 // ─── Role Codes ───
 export const RoleCode = Object.freeze({
     ADMIN: 'ADMIN',
+    MANAGER: 'MANAGER',
+    ACCOUNTANT: 'ACCOUNTANT',
     DRIVER: 'DRIVER',
-    APPROVER: 'APPROVER',
 });
 
 export const RoleCodeLabels = Object.freeze({
     [RoleCode.ADMIN]: 'Admin',
+    [RoleCode.MANAGER]: 'Manager',
+    [RoleCode.ACCOUNTANT]: 'Accountant',
     [RoleCode.DRIVER]: 'Driver',
-    [RoleCode.APPROVER]: 'Approver',
 });
 
 // ─── User Status ───
