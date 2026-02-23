@@ -135,7 +135,7 @@ const LoginPage = () => {
                     </form>
 
                     <div className="mt-8 text-center">
-                        <p className="text-sm text-slate-400">Demo: admin / admin</p>
+                        <p className="text-sm text-slate-400">Demo: admin / admin1201</p>
                     </div>
                 </div>
             </div>

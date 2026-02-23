@@ -68,13 +68,19 @@ const NavGroup = ({ label, icon: Icon, children, collapsed, onMobileClose }) => 
     const location = useLocation();
     const isChildActive = children.some(c => location.pathname === c.path || location.pathname.startsWith(c.path + '/'));
     const [open, setOpen] = useState(isChildActive);
+    const [hovered, setHovered] = useState(false);
 
     return (
-        <div>
+        <div
+            className="relative"
+            onMouseEnter={() => collapsed && setHovered(true)}
+            onMouseLeave={() => collapsed && setHovered(false)}
+        >
             <button
-                onClick={() => setOpen(!open)}
+                onClick={() => !collapsed && setOpen(!open)}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150
-                    ${isChildActive ? 'text-indigo-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}
+                    ${isChildActive ? 'text-indigo-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}
+                    ${collapsed ? 'justify-center' : ''}`}
             >
                 <Icon className="w-5 h-5 flex-shrink-0" />
                 {!collapsed && (
@@ -84,11 +90,27 @@ const NavGroup = ({ label, icon: Icon, children, collapsed, onMobileClose }) => 
                     </>
                 )}
             </button>
+
+            {/* Expanded mode: inline dropdown */}
             {!collapsed && open && (
                 <div className="ml-4 pl-3 border-l border-slate-200 mt-0.5 space-y-0.5">
                     {children.map(child => (
                         <NavLink key={child.path} {...child} collapsed={false} onMobileClose={onMobileClose} />
                     ))}
+                </div>
+            )}
+
+            {/* Collapsed mode: floating popover on hover */}
+            {collapsed && hovered && (
+                <div className="absolute left-full top-0 pl-2 z-50">
+                    <div className="w-48 bg-white rounded-lg shadow-lg border border-slate-200 py-2">
+                        <p className="px-3 py-1.5 text-xs font-semibold text-slate-400 uppercase tracking-wider">{label}</p>
+                        <div className="space-y-0.5 px-1">
+                            {children.map(child => (
+                                <NavLink key={child.path} {...child} collapsed={false} onMobileClose={onMobileClose} />
+                            ))}
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
@@ -116,7 +138,7 @@ const AppLayout = ({ children }) => {
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 overflow-y-auto py-3 px-3 space-y-1">
+            <nav className={`flex-1 py-3 px-3 space-y-1 ${collapsed ? 'overflow-visible' : 'overflow-y-auto'}`}>
                 {navItems.map((item) =>
                     item.children ? (
                         <NavGroup key={item.label} {...item} collapsed={collapsed} onMobileClose={closeMobile} />
