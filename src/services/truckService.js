@@ -8,11 +8,11 @@ const truckService = {
     },
 
     // POST /truck/createTruck
-    // Body: TruckCreateRequest { licensePlate, model, capacity, driverAssigned, status }
+    // Body: TruckCreateRequest { licensePlate, capacity, status }
     createTruck: (data) => axiosInstance.post('/truck/createTruck', data),
 
     // PUT /truck/updateTruck/{truckId}
-    // Body: TruckCreateRequest { licensePlate, model, capacity, driverAssigned, status }
+    // Body: TruckCreateRequest { licensePlate, capacity, status }
     updateTruck: (id, data) => axiosInstance.put(`/truck/updateTruck/${id}`, data),
 
     // PUT /truck/updateStatusTruck/{truckId}
