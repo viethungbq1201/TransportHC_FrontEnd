@@ -12,11 +12,12 @@ const categoryService = {
     createCategory: (data) => axiosInstance.post('/category/createCategory', data),
 
     // PUT /category/updateCategory/{categoryId}
+    // Body: CategoryCreateRequest { name }
     updateCategory: (id, data) => axiosInstance.put(`/category/updateCategory/${id}`, data),
 
-    // DELETE /category/deleltCategory/{categoryId}
-    // Note: "delelt" is a typo in the backend controller — must match exactly
-    deleteCategory: (id) => axiosInstance.delete(`/category/deleltCategory/${id}`),
+    // DELETE /category/delelteCategory/{categoryId}
+    // Note: "delelteCategory" is a typo in the backend controller — must match exactly
+    deleteCategory: (id) => axiosInstance.delete(`/category/delelteCategory/${id}`),
 };
 
 export default categoryService;

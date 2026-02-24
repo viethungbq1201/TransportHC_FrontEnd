@@ -8,11 +8,11 @@ const routeService = {
     },
 
     // POST /route/createRoute
-    // Body: RouteCreateRequest { startPoint, endPoint, distance, estimatedTime }
+    // Body: RouteCreateRequest { name, start_point, end_point, distance }
     createRoute: (data) => axiosInstance.post('/route/createRoute', data),
 
     // PUT /route/updateRoute/{routeId}
-    // Body: RouteCreateRequest { startPoint, endPoint, distance, estimatedTime }
+    // Body: RouteCreateRequest { name, start_point, end_point, distance }
     updateRoute: (id, data) => axiosInstance.put(`/route/updateRoute/${id}`, data),
 
     // DELETE /route/deleteRoute/{routeId}
