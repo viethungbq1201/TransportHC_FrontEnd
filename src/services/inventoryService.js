@@ -1,11 +1,17 @@
 import axiosInstance from '@/api/axiosInstance';
 
 const inventoryService = {
-    // GET /inventory/viewInventory → List<InventoryResponse>
-    // InventoryResponse: { inventoryId, product: ProductResponse, quantity, inTransit, upToDate }
+    // GET /inventory/viewInventory → List<InventoryResponse> (full list)
     getInventories: async () => {
         const data = await axiosInstance.get('/inventory/viewInventory');
         return Array.isArray(data) ? data : [];
+    },
+
+    // GET /inventory/viewInventoryPaged?page=0&size=10 → PageResponse<InventoryResponse>
+    // Returns: { content: [...], page, size, totalElements, totalPages }
+    getInventoriesPaged: async (page = 0, size = 10) => {
+        const data = await axiosInstance.get(`/inventory/viewInventoryPaged?page=${page}&size=${size}`);
+        return data;
     },
 
     // POST /inventory/createInventory

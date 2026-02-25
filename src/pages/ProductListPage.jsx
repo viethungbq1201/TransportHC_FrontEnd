@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Pencil, Trash2, X, Package, Eye } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, X, Package, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 import ActionButton from '@/components/ActionButton';
 import productService from '@/services/productService';
 import categoryService from '@/services/categoryService';
@@ -22,13 +22,23 @@ const ProductListPage = () => {
     const [deleteConfirm, setDeleteConfirm] = useState(null);
     const [detailItem, setDetailItem] = useState(null);
 
-    const fetchData = async () => {
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
+    const [totalElements, setTotalElements] = useState(0);
+    const PAGE_SIZE = 10;
+
+    const fetchData = async (page = currentPage) => {
+        setLoading(true);
         try {
-            const [productData, catData] = await Promise.all([
-                productService.getProducts(),
+            const [pageData, catData] = await Promise.all([
+                productService.getProductsPaged(page, PAGE_SIZE),
                 categoryService.getCategories(),
             ]);
-            setItems(Array.isArray(productData) ? productData : []);
+            setItems(pageData?.content || []);
+            setCurrentPage(pageData?.page || 0);
+            setTotalPages(pageData?.totalPages || 0);
+            setTotalElements(pageData?.totalElements || 0);
             setCategories(Array.isArray(catData) ? catData : []);
         } catch {
             setItems([]);
@@ -37,7 +47,7 @@ const ProductListPage = () => {
         finally { setLoading(false); }
     };
 
-    useEffect(() => { fetchData(); }, []);
+    useEffect(() => { fetchData(0); }, []);
 
     const filtered = items.filter(p => {
         const q = search.toLowerCase();
@@ -140,7 +150,7 @@ const ProductListPage = () => {
                         <tbody className="divide-y divide-slate-100">
                             {filtered.map((item, index) => (
                                 <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                                    <td className="px-5 py-4 text-sm text-slate-500">{index + 1}</td>
+                                    <td className="px-5 py-4 text-sm text-slate-500">{currentPage * PAGE_SIZE + index + 1}</td>
                                     <td className="px-5 py-4">
                                         <div className="flex items-center gap-2">
                                             <Package className="w-4 h-4 text-indigo-400" />
@@ -164,6 +174,54 @@ const ProductListPage = () => {
                             ))}
                         </tbody>
                     </table>
+                )}
+
+                {/* Pagination Controls */}
+                {!loading && totalPages > 1 && (
+                    <div className="flex items-center justify-between px-5 py-3 border-t border-slate-200 bg-slate-50/50">
+                        <p className="text-sm text-slate-500">
+                            Showing <span className="font-medium text-slate-700">{currentPage * PAGE_SIZE + 1}</span> to{' '}
+                            <span className="font-medium text-slate-700">{Math.min((currentPage + 1) * PAGE_SIZE, totalElements)}</span> of{' '}
+                            <span className="font-medium text-slate-700">{totalElements}</span> products
+                        </p>
+                        <div className="flex items-center gap-1">
+                            <button
+                                onClick={() => fetchData(currentPage - 1)}
+                                disabled={currentPage === 0}
+                                className="p-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            >
+                                <ChevronLeft className="w-4 h-4" />
+                            </button>
+                            {(() => {
+                                const MAX_VISIBLE = 5;
+                                let start = Math.max(0, currentPage - Math.floor(MAX_VISIBLE / 2));
+                                let end = start + MAX_VISIBLE;
+                                if (end > totalPages) { end = totalPages; start = Math.max(0, end - MAX_VISIBLE); }
+                                const pages = [];
+                                if (start > 0) {
+                                    pages.push(<button key={0} onClick={() => fetchData(0)} className="w-8 h-8 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">1</button>);
+                                    if (start > 1) pages.push(<span key="start-dots" className="w-8 h-8 flex items-center justify-center text-slate-400 text-sm">…</span>);
+                                }
+                                for (let i = start; i < end; i++) {
+                                    pages.push(
+                                        <button key={i} onClick={() => fetchData(i)} className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${i === currentPage ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'}`}>{i + 1}</button>
+                                    );
+                                }
+                                if (end < totalPages) {
+                                    if (end < totalPages - 1) pages.push(<span key="end-dots" className="w-8 h-8 flex items-center justify-center text-slate-400 text-sm">…</span>);
+                                    pages.push(<button key={totalPages - 1} onClick={() => fetchData(totalPages - 1)} className="w-8 h-8 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">{totalPages}</button>);
+                                }
+                                return pages;
+                            })()}
+                            <button
+                                onClick={() => fetchData(currentPage + 1)}
+                                disabled={currentPage >= totalPages - 1}
+                                className="p-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            >
+                                <ChevronRight className="w-4 h-4" />
+                            </button>
+                        </div>
+                    </div>
                 )}
             </div>
 

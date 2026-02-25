@@ -1,11 +1,17 @@
 import axiosInstance from '@/api/axiosInstance';
 
 const productService = {
-    // GET /product/viewProduct → List<ProductResponse>
-    // ProductResponse: { id, name, category: { categoryId, name }, price }
+    // GET /product/viewProduct → List<ProductResponse> (full list for dropdowns)
     getProducts: async () => {
         const data = await axiosInstance.get('/product/viewProduct');
         return Array.isArray(data) ? data : [];
+    },
+
+    // GET /product/viewProductPaged?page=0&size=10 → PageResponse<ProductResponse>
+    // Returns: { content: [...], page, size, totalElements, totalPages }
+    getProductsPaged: async (page = 0, size = 10) => {
+        const data = await axiosInstance.get(`/product/viewProductPaged?page=${page}&size=${size}`);
+        return data;
     },
 
     // POST /product/createProduct
