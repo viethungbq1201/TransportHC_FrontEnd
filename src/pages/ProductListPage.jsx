@@ -11,6 +11,7 @@ const formatPrice = (price) => {
 
 const ProductListPage = () => {
     const [items, setItems] = useState([]);
+    const [allItems, setAllItems] = useState([]);
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -31,17 +32,20 @@ const ProductListPage = () => {
     const fetchData = async (page = currentPage) => {
         setLoading(true);
         try {
-            const [pageData, catData] = await Promise.all([
+            const [pageData, allProdData, catData] = await Promise.all([
                 productService.getProductsPaged(page, PAGE_SIZE),
+                productService.getProducts(),
                 categoryService.getCategories(),
             ]);
             setItems(pageData?.content || []);
             setCurrentPage(pageData?.page || 0);
             setTotalPages(pageData?.totalPages || 0);
             setTotalElements(pageData?.totalElements || 0);
+            setAllItems(Array.isArray(allProdData) ? allProdData : []);
             setCategories(Array.isArray(catData) ? catData : []);
         } catch {
             setItems([]);
+            setAllItems([]);
             setCategories([]);
         }
         finally { setLoading(false); }
@@ -49,7 +53,13 @@ const ProductListPage = () => {
 
     useEffect(() => { fetchData(0); }, []);
 
-    const filtered = items.filter(p => {
+    // Determine if local search/category filter is active
+    const hasLocalFilter = !!(search || categoryFilter);
+
+    // When local filter is active → search across ALL data (allItems)
+    // When no filter → show current page data (items)
+    const dataSource = hasLocalFilter ? allItems : items;
+    const filtered = dataSource.filter(p => {
         const q = search.toLowerCase();
         const matchSearch = !search || [p.name, p.category?.name].some(v => v?.toLowerCase().includes(q));
         const matchCategory = !categoryFilter || String(p.category?.categoryId) === categoryFilter;
@@ -87,7 +97,7 @@ const ProductListPage = () => {
                 await productService.createProduct(payload);
             }
             setShowModal(false);
-            fetchData();
+            fetchData(0);
         } catch (err) { alert(err?.message || 'Error saving product'); }
         finally { setSaving(false); }
     };
@@ -96,7 +106,7 @@ const ProductListPage = () => {
         if (!deleteConfirm) return;
         try {
             await productService.deleteProduct(deleteConfirm.id);
-            fetchData();
+            fetchData(0);
         } catch (err) { alert(err?.message || 'Error deleting product'); }
         finally { setDeleteConfirm(null); }
     };
@@ -150,7 +160,7 @@ const ProductListPage = () => {
                         <tbody className="divide-y divide-slate-100">
                             {filtered.map((item, index) => (
                                 <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                                    <td className="px-5 py-4 text-sm text-slate-500">{currentPage * PAGE_SIZE + index + 1}</td>
+                                    <td className="px-5 py-4 text-sm text-slate-500">{hasLocalFilter ? index + 1 : currentPage * PAGE_SIZE + index + 1}</td>
                                     <td className="px-5 py-4">
                                         <div className="flex items-center gap-2">
                                             <Package className="w-4 h-4 text-indigo-400" />
@@ -177,7 +187,7 @@ const ProductListPage = () => {
                 )}
 
                 {/* Pagination Controls */}
-                {!loading && totalPages > 1 && (
+                {!loading && !hasLocalFilter && totalPages > 1 && (
                     <div className="flex items-center justify-between px-5 py-3 border-t border-slate-200 bg-slate-50/50">
                         <p className="text-sm text-slate-500">
                             Showing <span className="font-medium text-slate-700">{currentPage * PAGE_SIZE + 1}</span> to{' '}

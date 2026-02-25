@@ -76,9 +76,14 @@ const InventoryListPage = () => {
 
     useEffect(() => { fetchData(0); }, []);
 
-    // When advanced filter is active, items are already filtered from API
-    // Apply local search + category dropdown on top
-    const filtered = items.filter(i => {
+    // Determine if local search/category filter is active
+    const hasLocalFilter = !!(search || categoryFilter);
+
+    // When local filter is active → search across ALL data (allItems)
+    // When no filter → show current page data (items)
+    // When advanced filter is active → items already set from API, no local filter allowed
+    const dataSource = hasLocalFilter ? allItems : items;
+    const filtered = dataSource.filter(i => {
         const matchSearch = !search || i.product?.name?.toLowerCase().includes(search.toLowerCase());
         const matchCategory = !categoryFilter || String(i.product?.category?.categoryId) === categoryFilter;
         return matchSearch && matchCategory;
@@ -121,7 +126,7 @@ const InventoryListPage = () => {
         setShowAdvFilter(false);
         setSearch('');
         setCategoryFilter('');
-        fetchData();
+        fetchData(0);
     };
 
     const totalProducts = allItems.length;
@@ -167,7 +172,7 @@ const InventoryListPage = () => {
                 });
             }
             setShowModal(false);
-            fetchData();
+            fetchData(0);
         } catch (err) { alert(err?.message || 'Error saving inventory'); }
         finally { setSaving(false); }
     };
@@ -176,7 +181,7 @@ const InventoryListPage = () => {
         if (!deleteConfirm) return;
         try {
             await inventoryService.deleteInventory(deleteConfirm.inventoryId);
-            fetchData();
+            fetchData(0);
         } catch (err) { alert(err?.message || 'Error deleting inventory'); }
         finally { setDeleteConfirm(null); }
     };
@@ -193,7 +198,7 @@ const InventoryListPage = () => {
         if (!file) return;
         try {
             await inventoryService.importInventory(file);
-            fetchData();
+            fetchData(0);
         } catch (err) { alert(err?.message || 'Error importing inventory'); }
         finally { if (importRef.current) importRef.current.value = ''; }
     };
@@ -418,7 +423,7 @@ const InventoryListPage = () => {
                         <tbody className="divide-y divide-slate-100">
                             {filtered.map((item, index) => (
                                 <tr key={item.inventoryId} className="hover:bg-slate-50/50 transition-colors">
-                                    <td className="px-5 py-4 text-sm text-slate-500">{currentPage * PAGE_SIZE + index + 1}</td>
+                                    <td className="px-5 py-4 text-sm text-slate-500">{(hasLocalFilter || isFiltered) ? index + 1 : currentPage * PAGE_SIZE + index + 1}</td>
                                     <td className="px-5 py-4">
                                         <div className="flex items-center gap-2">
                                             <Package className="w-4 h-4 text-indigo-400" />
@@ -455,7 +460,7 @@ const InventoryListPage = () => {
                 )}
 
                 {/* Pagination Controls */}
-                {!loading && !isFiltered && totalPages > 1 && (
+                {!loading && !isFiltered && !hasLocalFilter && totalPages > 1 && (
                     <div className="flex items-center justify-between px-5 py-3 border-t border-slate-200 bg-slate-50/50">
                         <p className="text-sm text-slate-500">
                             Showing <span className="font-medium text-slate-700">{currentPage * PAGE_SIZE + 1}</span> to{' '}
