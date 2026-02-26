@@ -57,21 +57,27 @@ export const TruckStatusColors = Object.freeze({
 
 // ─── Schedule Status ───
 export const ScheduleStatus = Object.freeze({
-    WAITING: 'WAITING',
-    DELIVERING: 'DELIVERING',
+    PENDING: 'PENDING',
+    IN_TRANSIT: 'IN_TRANSIT',
     DONE: 'DONE',
+    CANCELLED: 'CANCELLED',
+    REJECTED: 'REJECTED',
 });
 
 export const ScheduleStatusLabels = Object.freeze({
-    [ScheduleStatus.WAITING]: 'Waiting',
-    [ScheduleStatus.DELIVERING]: 'Delivering',
+    [ScheduleStatus.PENDING]: 'Pending',
+    [ScheduleStatus.IN_TRANSIT]: 'In Transit',
     [ScheduleStatus.DONE]: 'Done',
+    [ScheduleStatus.CANCELLED]: 'Cancelled',
+    [ScheduleStatus.REJECTED]: 'Rejected',
 });
 
 export const ScheduleStatusColors = Object.freeze({
-    [ScheduleStatus.WAITING]: 'bg-amber-100 text-amber-800',
-    [ScheduleStatus.DELIVERING]: 'bg-blue-100 text-blue-800',
+    [ScheduleStatus.PENDING]: 'bg-amber-100 text-amber-800',
+    [ScheduleStatus.IN_TRANSIT]: 'bg-indigo-100 text-indigo-800',
     [ScheduleStatus.DONE]: 'bg-emerald-100 text-emerald-800',
+    [ScheduleStatus.CANCELLED]: 'bg-slate-100 text-slate-800',
+    [ScheduleStatus.REJECTED]: 'bg-red-100 text-red-800',
 });
 
 // ─── Approve Status ───
