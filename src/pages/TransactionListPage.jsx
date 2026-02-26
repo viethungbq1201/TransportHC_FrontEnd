@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Trash2, X, FileText, CheckCircle, XCircle } from 'lucide-react';
+import { Plus, Search, Trash2, X, FileText, CheckCircle, XCircle, Pencil, Eye } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import ActionButton from '@/components/ActionButton';
 import transactionService from '@/services/transactionService';
 import { ApproveStatus, ApproveStatusLabels, ApproveStatusColors, TransactionType, TransactionTypeLabels } from '@/constants/enums';
@@ -15,20 +16,21 @@ const approveBadge = (status) => {
 
 const typeBadge = (type) => {
     const map = {
-        [TransactionType.IMPORT]: 'bg-blue-50 text-blue-700 border-blue-200',
-        [TransactionType.EXPORT]: 'bg-purple-50 text-purple-700 border-purple-200',
+        [TransactionType.IN]: 'bg-blue-50 text-blue-700 border-blue-200',
+        [TransactionType.OUT]: 'bg-purple-50 text-purple-700 border-purple-200',
     };
     return map[type] || 'bg-slate-50 text-slate-600 border-slate-200';
 };
 
 const TransactionListPage = () => {
+    const navigate = useNavigate();
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
     const [showModal, setShowModal] = useState(false);
-    // Backend DTO: TransactionCreateRequest { transactionType: "IMPORT"|"EXPORT" }
-    const [form, setForm] = useState({ transactionType: 'IMPORT' });
+    const [editId, setEditId] = useState(null);
+    const [form, setForm] = useState({ transactionType: 'IN', location: '', note: '' });
     const [saving, setSaving] = useState(false);
 
     const fetchData = async () => { try { const data = await transactionService.getAllTransactions(); setItems(Array.isArray(data) ? data : []); } catch { setItems([]); } finally { setLoading(false); } };
@@ -44,11 +46,39 @@ const TransactionListPage = () => {
         return matchSearch && matchStatus;
     });
 
-    const formatDate = (d) => { if (!d) return '-'; try { return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); } catch { return '-'; } };
+    // const formatDate = (d) => { if (!d) return '-'; try { return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }); } catch { return '-'; } };
+    const formatDate = (d) => {
+        if (!d) return '-';
+        try {
+            return new Date(d).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        } catch { return '-'; }
+    };
 
-    const openCreate = () => { setForm({ transactionType: 'IMPORT' }); setShowModal(true); };
+    const openCreate = () => { setEditId(null); setForm({ transactionType: 'IN', location: '', note: '' }); setShowModal(true); };
+    const openEdit = (item) => {
+        setEditId(item.transactionId);
+        setForm({
+            transactionType: item.transactionType || 'IN',
+            location: item.location || '',
+            note: item.note || ''
+        });
+        setShowModal(true);
+    };
 
-    const handleSubmit = async (e) => { e.preventDefault(); setSaving(true); try { await transactionService.createTransaction(form); setShowModal(false); fetchData(); } catch (err) { alert(err?.message || 'Error'); } finally { setSaving(false); } };
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setSaving(true);
+        try {
+            if (editId) {
+                await transactionService.updateTransaction(editId, form);
+            } else {
+                await transactionService.createTransaction(form);
+            }
+            setShowModal(false);
+            fetchData();
+        } catch (err) { alert(err?.message || 'Error'); }
+        finally { setSaving(false); }
+    };
 
     // Approve/Reject are separate PUT endpoints with NO body
     const handleApprove = async (id) => { try { await transactionService.approveTransaction(id); fetchData(); } catch (err) { alert(err?.message || 'Error'); } };
@@ -71,27 +101,31 @@ const TransactionListPage = () => {
                 ) : filtered.length === 0 ? (<div className="flex flex-col items-center justify-center py-16 text-slate-400"><FileText className="w-12 h-12 mb-3 opacity-30" /><p className="text-sm">No transactions found</p></div>
                 ) : (
                     <table className="w-full"><thead><tr className="border-b border-slate-200">
-                        <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">ID</th>
+                        <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">No.</th>
                         <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Type</th>
                         <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Created By</th>
                         <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Approval Status</th>
+                        <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Location</th>
                         <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Created Date</th>
                         <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
                     </tr></thead>
-                        <tbody>{filtered.map(item => (
+                        <tbody>{filtered.map((item, index) => (
                             <tr key={item.transactionId} className="border-b border-slate-100 hover:bg-slate-50/50">
-                                <td className="px-5 py-3.5 text-sm font-medium text-slate-900">#{item.transactionId}</td>
+                                <td className="px-5 py-3.5 text-sm font-medium text-slate-900">{index + 1}</td>
                                 <td className="px-5 py-3.5"><span className={`inline-flex px-2.5 py-0.5 text-xs font-medium rounded-full border ${typeBadge(item.transactionType)}`}>{TransactionTypeLabels[item.transactionType] || item.transactionType}</span></td>
                                 <td className="px-5 py-3.5 text-sm text-slate-600">{item.createdBy?.fullName || '-'}</td>
                                 <td className="px-5 py-3.5"><span className={`inline-flex px-2.5 py-0.5 text-xs font-medium rounded-full border ${approveBadge(item.approveStatus)}`}>{ApproveStatusLabels[item.approveStatus] || item.approveStatus || '-'}</span></td>
-                                <td className="px-5 py-3.5 text-sm text-slate-500">{formatDate(item.createdAt)}</td>
+                                <td className="px-5 py-3.5 text-sm text-slate-600">{item.location || '-'}</td>
+                                <td className="px-5 py-3.5 text-sm text-slate-500">{formatDate(item.date)}</td>
                                 <td className="px-5 py-3.5">
                                     <div className="flex items-center gap-1.5">
+                                        <ActionButton onClick={() => navigate('/transaction-details', { state: { transactionId: item.transactionId } })} icon={Eye} title="View Details" color="indigo" />
                                         {item.approveStatus === ApproveStatus.PENDING && <>
                                             <ActionButton onClick={() => handleApprove(item.transactionId)} icon={CheckCircle} title="Approve" color="green" />
                                             <ActionButton onClick={() => handleReject(item.transactionId)} icon={XCircle} title="Reject" color="amber" />
+                                            <ActionButton onClick={() => openEdit(item)} icon={Pencil} title="Edit" color="blue" />
+                                            <ActionButton onClick={() => handleDelete(item.transactionId)} icon={Trash2} title="Delete" color="red" />
                                         </>}
-                                        <ActionButton onClick={() => handleDelete(item.transactionId)} icon={Trash2} title="Delete" color="red" />
                                     </div>
                                 </td>
                             </tr>
@@ -99,15 +133,24 @@ const TransactionListPage = () => {
                 )}
             </div>
 
-            {/* Create Modal — only transactionType needed */}
-            {showModal && (<div className="fixed inset-0 z-50 flex items-center justify-center"><div className="absolute inset-0 bg-black/30" onClick={() => setShowModal(false)} /><div className="relative bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6"><div className="flex items-center justify-between mb-5"><h2 className="text-lg font-semibold text-slate-900">New Transaction</h2><button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600"><X className="w-5 h-5" /></button></div><form onSubmit={handleSubmit} className="space-y-4">
+            {/* Create/Edit Modal */}
+            {showModal && (<div className="fixed inset-0 z-50 flex items-center justify-center"><div className="absolute inset-0 bg-black/30" onClick={() => setShowModal(false)} /><div className="relative bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6"><div className="flex items-center justify-between mb-5"><h2 className="text-lg font-semibold text-slate-900">{editId ? 'Edit Transaction' : 'New Transaction'}</h2><button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600"><X className="w-5 h-5" /></button></div><form onSubmit={handleSubmit} className="space-y-4">
                 <div><label className="block text-sm font-medium text-slate-700 mb-1">Transaction Type</label>
                     <select value={form.transactionType} onChange={e => setForm({ ...form, transactionType: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
-                        <option value="IMPORT">Import</option>
-                        <option value="EXPORT">Export</option>
+                        <option value="IN">In</option>
+                        <option value="OUT">Out</option>
                     </select>
                 </div>
-                <div className="flex gap-3 pt-2"><button type="button" onClick={() => setShowModal(false)} className="flex-1 py-2.5 border border-slate-200 text-sm font-medium text-slate-700 rounded-lg hover:bg-slate-50">Cancel</button><button type="submit" disabled={saving} className="flex-1 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">{saving ? 'Creating...' : 'Create'}</button></div>
+                <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Location <span className="text-red-500">*</span></label>
+                    <input type="text" value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} required minLength={4} maxLength={255} placeholder="e.g. Warehouse A" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20" />
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Note</label>
+                    <textarea value={form.note} onChange={e => setForm({ ...form, note: e.target.value })} placeholder="Optional notes..." rows={3} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"></textarea>
+                </div>
+
+                <div className="flex gap-3 pt-2"><button type="button" onClick={() => setShowModal(false)} className="flex-1 py-2.5 border border-slate-200 text-sm font-medium text-slate-700 rounded-lg hover:bg-slate-50">Cancel</button><button type="submit" disabled={saving} className="flex-1 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">{saving ? 'Saving...' : (editId ? 'Update' : 'Create')}</button></div>
             </form></div></div>)}
         </div>
     );

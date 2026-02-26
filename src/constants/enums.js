@@ -95,13 +95,13 @@ export const ApproveStatusColors = Object.freeze({
 
 // ─── Transaction Type ───
 export const TransactionType = Object.freeze({
-    IMPORT: 'IMPORT',
-    EXPORT: 'EXPORT',
+    IN: 'IN',
+    OUT: 'OUT',
 });
 
 export const TransactionTypeLabels = Object.freeze({
-    [TransactionType.IMPORT]: 'Import',
-    [TransactionType.EXPORT]: 'Export',
+    [TransactionType.IN]: 'In',
+    [TransactionType.OUT]: 'Out',
 });
 
 // ─── Salary Report Status ───

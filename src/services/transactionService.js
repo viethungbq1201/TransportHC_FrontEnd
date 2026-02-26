@@ -11,6 +11,9 @@ const transactionService = {
     // Body: TransactionCreateRequest { transactionType: "IMPORT"|"EXPORT" }
     createTransaction: (data) => axiosInstance.post('/transaction/createTransaction', data),
 
+    // PUT /transaction/updateTransaction/{transactionId}
+    updateTransaction: (id, data) => axiosInstance.put(`/transaction/updateTransaction/${id}`, data),
+
     // PUT /transaction/approveTransaction/{transactionId} — NO request body!
     approveTransaction: (id) => axiosInstance.put(`/transaction/approveTransaction/${id}`),
 
