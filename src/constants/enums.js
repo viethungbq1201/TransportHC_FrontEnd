@@ -112,16 +112,16 @@ export const TransactionTypeLabels = Object.freeze({
 
 // ─── Salary Report Status ───
 export const SalaryReportStatus = Object.freeze({
-    PROCESSING: 'PROCESSING',
+    PENDING: 'PENDING',
     DONE: 'DONE',
 });
 
 export const SalaryReportStatusLabels = Object.freeze({
-    [SalaryReportStatus.PROCESSING]: 'Processing',
+    [SalaryReportStatus.PENDING]: 'Pending',
     [SalaryReportStatus.DONE]: 'Done',
 });
 
 export const SalaryReportStatusColors = Object.freeze({
-    [SalaryReportStatus.PROCESSING]: 'bg-amber-100 text-amber-800',
+    [SalaryReportStatus.PENDING]: 'bg-amber-100 text-amber-800',
     [SalaryReportStatus.DONE]: 'bg-emerald-100 text-emerald-800',
 });
