@@ -8,7 +8,7 @@ const TABS = [
     { key: 'rewardTruck', label: 'Reward & Trips by Truck', icon: Activity },
     { key: 'tripCount', label: 'Trip Count by Truck', icon: Truck },
     { key: 'systemCost', label: 'Overall System Cost', icon: BarChart3 },
-    { key: 'dailyReport', label: 'Daily Truck Report (By Driver)', icon: FileText },
+    { key: 'dailyReport', label: 'Daily Truck Report', icon: FileText },
 ];
 
 const ReportPage = () => {
