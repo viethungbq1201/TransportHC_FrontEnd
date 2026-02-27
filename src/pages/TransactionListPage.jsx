@@ -32,6 +32,7 @@ const TransactionListPage = () => {
     const [editId, setEditId] = useState(null);
     const [form, setForm] = useState({ transactionType: 'IN', location: '', note: '' });
     const [saving, setSaving] = useState(false);
+    const [deleteConfirmId, setDeleteConfirmId] = useState(null);
 
     const fetchData = async () => { try { const data = await transactionService.getAllTransactions(); setItems(Array.isArray(data) ? data : []); } catch { setItems([]); } finally { setLoading(false); } };
     useEffect(() => { fetchData(); }, []);
@@ -83,7 +84,8 @@ const TransactionListPage = () => {
     // Approve/Reject are separate PUT endpoints with NO body
     const handleApprove = async (id) => { try { await transactionService.approveTransaction(id); fetchData(); } catch (err) { alert(err?.message || 'Error'); } };
     const handleReject = async (id) => { try { await transactionService.rejectTransaction(id); fetchData(); } catch (err) { alert(err?.message || 'Error'); } };
-    const handleDelete = async (id) => { if (!window.confirm('Delete this transaction?')) return; try { await transactionService.deleteTransaction(id); fetchData(); } catch (err) { alert(err?.message || 'Error'); } };
+    const handleDelete = (id) => { setDeleteConfirmId(id); };
+    const confirmDelete = async () => { if (!deleteConfirmId) return; try { await transactionService.deleteTransaction(deleteConfirmId); fetchData(); setDeleteConfirmId(null); } catch (err) { alert(err?.message || 'Error'); } };
 
     return (
         <div>
@@ -152,6 +154,23 @@ const TransactionListPage = () => {
 
                 <div className="flex gap-3 pt-2"><button type="button" onClick={() => setShowModal(false)} className="flex-1 py-2.5 border border-slate-200 text-sm font-medium text-slate-700 rounded-lg hover:bg-slate-50">Cancel</button><button type="submit" disabled={saving} className="flex-1 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">{saving ? 'Saving...' : (editId ? 'Update' : 'Create')}</button></div>
             </form></div></div>)}
+
+            {deleteConfirmId && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    <div className="absolute inset-0 bg-black/30" onClick={() => setDeleteConfirmId(null)} />
+                    <div className="relative bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 p-6 text-center">
+                        <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Trash2 className="w-6 h-6 text-red-600" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-slate-900 mb-2">Delete Transaction</h3>
+                        <p className="text-sm text-slate-500 mb-6">Are you sure you want to delete this transaction? This action cannot be undone.</p>
+                        <div className="flex justify-end gap-3">
+                            <button onClick={() => setDeleteConfirmId(null)} className="flex-1 px-4 py-2 border border-slate-200 text-sm font-medium text-slate-700 rounded-lg hover:bg-slate-50">Cancel</button>
+                            <button onClick={confirmDelete} className="flex-1 px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

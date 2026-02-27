@@ -21,6 +21,7 @@ const TransactionDetailListPage = () => {
     const [form, setForm] = useState({ transactionId: '', productId: '', quantityChange: '' });
     const [editId, setEditId] = useState(null);
     const [actionMenuId, setActionMenuId] = useState(null);
+    const [deleteConfirmId, setDeleteConfirmId] = useState(null);
 
     const fetchData = async () => {
         setLoading(true);
@@ -89,11 +90,15 @@ const TransactionDetailListPage = () => {
         finally { setSaving(false); }
     };
 
-    const handleDelete = async (id) => {
-        if (!window.confirm('Delete this transaction detail?')) return;
-        try { await transactionDetailService.delete(id); fetchData(); }
-        catch (err) { alert(err?.message || 'Error'); }
+    const handleDelete = (id) => {
+        setDeleteConfirmId(id);
     };
+
+    const confirmDelete = async () => {
+        if (!deleteConfirmId) return;
+        try { await transactionDetailService.delete(deleteConfirmId); fetchData(); setDeleteConfirmId(null); }
+        catch (err) { alert(err?.message || 'Error'); }
+    }
 
     const groupedItems = filtered.reduce((acc, current) => {
         const tid = current.transaction?.transactionId || 'Unknown';
@@ -232,6 +237,23 @@ const TransactionDetailListPage = () => {
                 <div><label className="block text-sm font-medium text-slate-700 mb-1">Quantity Change</label><input type="number" value={form.quantityChange} onChange={e => setForm({ ...form, quantityChange: e.target.value })} required className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20" /></div>
                 <div className="flex gap-3 pt-2"><button type="button" onClick={() => setShowModal(false)} className="flex-1 py-2.5 border border-slate-200 text-sm font-medium text-slate-700 rounded-lg hover:bg-slate-50">Cancel</button><button type="submit" disabled={saving} className="flex-1 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">{saving ? 'Saving...' : (editId ? 'Update' : 'Create')}</button></div>
             </form></div></div>)}
+
+            {deleteConfirmId && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    <div className="absolute inset-0 bg-black/30" onClick={() => setDeleteConfirmId(null)} />
+                    <div className="relative bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 p-6 text-center">
+                        <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Trash2 className="w-6 h-6 text-red-600" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-slate-900 mb-2">Delete Detail</h3>
+                        <p className="text-sm text-slate-500 mb-6">Are you sure you want to delete this detail record? This action cannot be undone.</p>
+                        <div className="flex justify-end gap-3">
+                            <button onClick={() => setDeleteConfirmId(null)} className="flex-1 px-4 py-2 border border-slate-200 text-sm font-medium text-slate-700 rounded-lg hover:bg-slate-50">Cancel</button>
+                            <button onClick={confirmDelete} className="flex-1 px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

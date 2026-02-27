@@ -20,15 +20,6 @@ const statusBadge = (status) => {
     return map[status] || 'bg-slate-50 text-slate-600 border-slate-200';
 };
 
-const approveBadge = (status) => {
-    const map = {
-        [ApproveStatus.PENDING]: 'bg-yellow-50 text-yellow-700 border-yellow-200',
-        [ApproveStatus.APPROVED]: 'bg-green-50 text-green-700 border-green-200',
-        [ApproveStatus.REJECTED]: 'bg-red-50 text-red-700 border-red-200',
-    };
-    return map[status] || 'bg-slate-50 text-slate-600 border-slate-200';
-};
-
 const ScheduleListPage = () => {
     const navigate = useNavigate();
     const [items, setItems] = useState([]);
@@ -47,7 +38,14 @@ const ScheduleListPage = () => {
     // End schedule modal
     const [showEndModal, setShowEndModal] = useState(false);
     const [endingScheduleId, setEndingScheduleId] = useState(null);
-    const [endForm, setEndForm] = useState({ actualArrivalTime: '', documentaryProof: '' });
+    const [endForm, setEndForm] = useState({ documentaryProof: '' });
+
+    // Delete Custom Modal
+    const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+
+    const usedTransactionIds = items
+        .filter(s => s.transaction?.transactionId)
+        .map(s => s.transaction.transactionId);
 
     const fetchData = async () => {
         setLoading(true);
@@ -133,14 +131,15 @@ const ScheduleListPage = () => {
     const handleReject = async (id) => { try { await scheduleService.rejectSchedule(id); fetchData(); } catch (err) { alert(err?.message || 'Error'); } };
     const handleCancel = async (id) => { try { await scheduleService.cancelSchedule(id); fetchData(); } catch (err) { alert(err?.message || 'Error'); } };
 
-    const openEndModal = (id) => { setEndingScheduleId(id); setEndForm({ actualArrivalTime: '', documentaryProof: '' }); setShowEndModal(true); };
+    const openEndModal = (id) => { setEndingScheduleId(id); setEndForm({ documentaryProof: '' }); setShowEndModal(true); };
     const handleEndSchedule = async (e) => {
         e.preventDefault();
         try { await scheduleService.endSchedule(endingScheduleId, endForm); setShowEndModal(false); fetchData(); }
         catch (err) { alert(err?.message || 'Error'); }
     };
 
-    const handleDelete = async (id) => { if (!window.confirm('Delete this schedule?')) return; try { await scheduleService.deleteSchedule(id); fetchData(); } catch (err) { alert(err?.message || 'Error'); } };
+    const handleDelete = (id) => { setDeleteConfirmId(id); };
+    const confirmDelete = async () => { if (!deleteConfirmId) return; try { await scheduleService.deleteSchedule(deleteConfirmId); fetchData(); setDeleteConfirmId(null); } catch (err) { alert(err?.message || 'Error'); } };
 
     return (
         <div>
@@ -199,16 +198,16 @@ const ScheduleListPage = () => {
                                 <td className="px-5 py-3.5">
                                     <div className="flex items-center gap-1.5 flex-wrap">
                                         <ActionButton onClick={() => navigate('/transaction-details', { state: { transactionId: item.transaction?.transactionId } })} icon={Eye} title="View Transaction" color="indigo" />
-                                        <ActionButton onClick={() => openEdit(item)} icon={Pencil} title="Edit" color="blue" />
                                         {item.approveStatus === ScheduleStatus.PENDING && <>
                                             <ActionButton onClick={() => handleApprove(item.scheduleId || item.id)} icon={CheckCircle} title="Approve (To In Transit)" color="green" />
                                             <ActionButton onClick={() => handleReject(item.scheduleId || item.id)} icon={XCircle} title="Reject" color="amber" />
+                                            <ActionButton onClick={() => openEdit(item)} icon={Pencil} title="Edit" color="blue" />
+                                            <ActionButton onClick={() => handleDelete(item.scheduleId || item.id)} icon={Trash2} title="Delete" color="red" />
                                         </>}
                                         {item.approveStatus === ScheduleStatus.IN_TRANSIT && <>
                                             <ActionButton onClick={() => openEndModal(item.scheduleId || item.id)} icon={StopCircle} title="End Schedule (To Done)" color="indigo" />
                                             <ActionButton onClick={() => handleCancel(item.scheduleId || item.id)} icon={Ban} title="Cancel Schedule" color="amber" />
                                         </>}
-                                        <ActionButton onClick={() => handleDelete(item.scheduleId || item.id)} icon={Trash2} title="Delete" color="red" />
                                     </div>
                                 </td>
                             </tr>
@@ -222,9 +221,21 @@ const ScheduleListPage = () => {
                     <label className="block text-sm font-medium text-slate-700 mb-1">Transaction</label>
                     <select value={form.transactionId} onChange={e => setForm({ ...form, transactionId: e.target.value })} required className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
                         <option value="">Select Transaction...</option>
-                        {transactions.filter(t => t.approveStatus === 'APPROVED' || t.transactionId === Number(form.transactionId)).map(t => (
-                            <option key={t.transactionId} value={t.transactionId}>#{t.transactionId} - {t.transactionType} ({t.location})</option>
-                        ))}
+                        {transactions
+                            .filter(t => {
+                                const isApproved = t.approveStatus === 'APPROVED';
+                                const isCurrentEditing = t.transactionId === Number(form.transactionId);
+                                const isUsed = usedTransactionIds.includes(t.transactionId);
+
+                                // Chỉ cho phép:
+                                // - Approved
+                                // - Chưa bị dùng
+                                // - Hoặc là transaction hiện tại đang edit
+                                return isApproved && (!isUsed || isCurrentEditing);
+                            })
+                            .map(t => (
+                                <option key={t.transactionId} value={t.transactionId}>#{t.transactionId} - {t.transactionType} ({t.location})</option>
+                            ))}
                     </select>
                 </div>
                 <div>
@@ -263,10 +274,26 @@ const ScheduleListPage = () => {
 
             {/* End Schedule Modal */}
             {showEndModal && (<div className="fixed inset-0 z-50 flex items-center justify-center"><div className="absolute inset-0 bg-black/30" onClick={() => setShowEndModal(false)} /><div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6"><div className="flex items-center justify-between mb-5"><h2 className="text-lg font-semibold text-slate-900">End Schedule</h2><button onClick={() => setShowEndModal(false)} className="text-slate-400 hover:text-slate-600"><X className="w-5 h-5" /></button></div><form onSubmit={handleEndSchedule} className="space-y-4">
-                <div><label className="block text-sm font-medium text-slate-700 mb-1">Actual Arrival Time</label><input type="datetime-local" value={endForm.actualArrivalTime} onChange={e => setEndForm({ ...endForm, actualArrivalTime: e.target.value })} required className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20" /></div>
                 <div><label className="block text-sm font-medium text-slate-700 mb-1">Documentary Proof (URL/Note)</label><textarea value={endForm.documentaryProof || ''} onChange={e => setEndForm({ ...endForm, documentaryProof: e.target.value })} rows={3} placeholder="Link to images or notes..." className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20" /></div>
                 <div className="flex gap-3 pt-2"><button type="button" onClick={() => setShowEndModal(false)} className="flex-1 py-2.5 border border-slate-200 text-sm font-medium text-slate-700 rounded-lg hover:bg-slate-50">Cancel</button><button type="submit" className="flex-1 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">Confirm End</button></div>
             </form></div></div>)}
+
+            {deleteConfirmId && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    <div className="absolute inset-0 bg-black/30" onClick={() => setDeleteConfirmId(null)} />
+                    <div className="relative bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 p-6 text-center">
+                        <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Trash2 className="w-6 h-6 text-red-600" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-slate-900 mb-2">Delete Schedule</h3>
+                        <p className="text-sm text-slate-500 mb-6">Are you sure you want to delete this schedule? This action cannot be undone.</p>
+                        <div className="flex justify-end gap-3">
+                            <button onClick={() => setDeleteConfirmId(null)} className="flex-1 px-4 py-2 border border-slate-200 text-sm font-medium text-slate-700 rounded-lg hover:bg-slate-50">Cancel</button>
+                            <button onClick={confirmDelete} className="flex-1 px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
