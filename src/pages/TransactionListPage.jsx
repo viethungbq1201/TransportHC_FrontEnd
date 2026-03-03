@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import ActionButton from '@/components/ActionButton';
 import transactionService from '@/services/transactionService';
 import { ApproveStatus, ApproveStatusLabels, ApproveStatusColors, TransactionType, TransactionTypeLabels } from '@/constants/enums';
+import usePermissions from '@/hooks/usePermissions';
 
 const approveBadge = (status) => {
     const map = {
@@ -23,6 +24,7 @@ const typeBadge = (type) => {
 };
 
 const TransactionListPage = () => {
+    const { can } = usePermissions();
     const navigate = useNavigate();
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -91,7 +93,7 @@ const TransactionListPage = () => {
         <div>
             <div className="flex items-start justify-between mb-6">
                 <div><h1 className="text-2xl font-bold text-slate-900">Transaction Management</h1><p className="text-slate-500 text-sm mt-1">Manage import/export transactions</p></div>
-                <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700"><Plus className="w-4 h-4" /> New Transaction</button>
+                {can('CREATE_TRANSACTION') && <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700"><Plus className="w-4 h-4" /> New Transaction</button>}
             </div>
             <div className="flex flex-col sm:flex-row gap-3 mb-4">
                 <div className="relative flex-1 max-w-md"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" /><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by ID, creator, or type..." className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400" /></div>
@@ -123,10 +125,10 @@ const TransactionListPage = () => {
                                     <div className="flex items-center gap-1.5">
                                         <ActionButton onClick={() => navigate('/transaction-details', { state: { transactionId: item.transactionId } })} icon={Eye} title="View Details" color="indigo" />
                                         {item.approveStatus === ApproveStatus.PENDING && <>
-                                            <ActionButton onClick={() => handleApprove(item.transactionId)} icon={CheckCircle} title="Approve" color="green" />
-                                            <ActionButton onClick={() => handleReject(item.transactionId)} icon={XCircle} title="Reject" color="amber" />
-                                            <ActionButton onClick={() => openEdit(item)} icon={Pencil} title="Edit" color="blue" />
-                                            <ActionButton onClick={() => handleDelete(item.transactionId)} icon={Trash2} title="Delete" color="red" />
+                                            {can('APPROVE_TRANSACTION') && <ActionButton onClick={() => handleApprove(item.transactionId)} icon={CheckCircle} title="Approve" color="green" />}
+                                            {can('REJECT_TRANSACTION') && <ActionButton onClick={() => handleReject(item.transactionId)} icon={XCircle} title="Reject" color="amber" />}
+                                            {can('UPDATE_TRANSACTION') && <ActionButton onClick={() => openEdit(item)} icon={Pencil} title="Edit" color="blue" />}
+                                            {can('DELETE_TRANSACTION') && <ActionButton onClick={() => handleDelete(item.transactionId)} icon={Trash2} title="Delete" color="red" />}
                                         </>}
                                     </div>
                                 </td>

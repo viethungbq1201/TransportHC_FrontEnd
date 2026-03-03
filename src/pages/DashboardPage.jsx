@@ -7,7 +7,7 @@ import transactionService from '@/services/transactionService';
 import inventoryService from '@/services/inventoryService';
 import reportService from '@/services/reportService';
 
-const StatCard = ({ title, value, icon: Icon, color, subtitle }) => (
+const StatCard = ({ title, value, icon: Icon, color, subtitle = '' }) => (
     <div className="bg-white rounded-xl border border-slate-200 p-5">
         <div className="flex items-start justify-between">
             <div>

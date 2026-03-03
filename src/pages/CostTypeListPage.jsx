@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Search, Pencil, Trash2, X, Tag } from 'lucide-react';
 import ActionButton from '@/components/ActionButton';
 import costTypeService from '@/services/costTypeService';
+import usePermissions from '@/hooks/usePermissions';
 
 const CostTypeListPage = () => {
+    const { can } = usePermissions();
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -36,7 +38,7 @@ const CostTypeListPage = () => {
         <div>
             <div className="flex items-start justify-between mb-6">
                 <div><h1 className="text-2xl font-bold text-slate-900">Cost Type</h1><p className="text-slate-500 text-sm mt-1">Manage cost categories for schedules</p></div>
-                <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700"><Plus className="w-4 h-4" /> Add Cost Type</button>
+                {can('CREATE_COST_TYPE') && <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700"><Plus className="w-4 h-4" /> Add Cost Type</button>}
             </div>
             <div className="flex gap-3 mb-4"><div className="relative flex-1 max-w-md"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" /><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search cost types..." className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400" /></div></div>
 
@@ -55,8 +57,8 @@ const CostTypeListPage = () => {
                                 <td className="px-5 py-3.5 text-sm font-medium text-slate-900">{item.name}</td>
                                 <td className="px-5 py-3.5">
                                     <div className="flex items-center gap-1.5">
-                                        <ActionButton onClick={() => openEdit(item)} icon={Pencil} title="Edit" color="blue" />
-                                        <ActionButton onClick={() => handleDelete(item.costTypeId)} icon={Trash2} title="Delete" color="red" />
+                                        {can('UPDATE_COST_TYPE') && <ActionButton onClick={() => openEdit(item)} icon={Pencil} title="Edit" color="blue" />}
+                                        {can('DELETE_COST_TYPE') && <ActionButton onClick={() => handleDelete(item.costTypeId)} icon={Trash2} title="Delete" color="red" />}
                                     </div>
                                 </td>
                             </tr>

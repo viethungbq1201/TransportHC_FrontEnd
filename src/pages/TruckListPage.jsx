@@ -3,6 +3,7 @@ import { Plus, Search, Pencil, Trash2, X, Truck as TruckIcon, Eye, ChevronDown }
 import ActionButton from '@/components/ActionButton';
 import truckService from '@/services/truckService';
 import { TruckStatus, TruckStatusLabels } from '@/constants/enums';
+import usePermissions from '@/hooks/usePermissions';
 
 const statusBadgeClass = (status) => {
     const map = {
@@ -21,6 +22,7 @@ const statusDot = (status) => {
 };
 
 const TruckListPage = () => {
+    const { can } = usePermissions();
     const [trucks, setTrucks] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -125,9 +127,11 @@ const TruckListPage = () => {
                     <h1 className="text-2xl font-bold text-slate-900">Truck Management</h1>
                     <p className="text-slate-500 text-sm mt-1">Manage your fleet of trucks</p>
                 </div>
-                <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors">
-                    <Plus className="w-4 h-4" /> Add Truck
-                </button>
+                {can('CREATE_TRUCK') && (
+                    <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors">
+                        <Plus className="w-4 h-4" /> Add Truck
+                    </button>
+                )}
             </div>
 
             {/* Filters */}
@@ -180,6 +184,7 @@ const TruckListPage = () => {
                                         <button
                                             ref={el => { statusBtnRef.current[truck.id] = el; }}
                                             onClick={(e) => {
+                                                if (!can('UPDATE_STATUS_TRUCK')) return;
                                                 if (statusDropdownId === truck.id) {
                                                     setStatusDropdownId(null);
                                                 } else {
@@ -188,18 +193,19 @@ const TruckListPage = () => {
                                                     setStatusDropdownId(truck.id);
                                                 }
                                             }}
-                                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border cursor-pointer hover:shadow-sm transition-shadow ${statusBadgeClass(truck.status)}`}
+                                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${can('UPDATE_STATUS_TRUCK') ? 'cursor-pointer hover:shadow-sm transition-shadow' : 'cursor-default'} ${statusBadgeClass(truck.status)}`}
+                                            disabled={!can('UPDATE_STATUS_TRUCK')}
                                         >
                                             <div className={`w-1.5 h-1.5 rounded-full ${statusDot(truck.status)}`} />
                                             {TruckStatusLabels[truck.status] || truck.status}
-                                            <ChevronDown className="w-3 h-3 ml-0.5 opacity-60" />
+                                            {can('UPDATE_STATUS_TRUCK') && <ChevronDown className="w-3 h-3 ml-0.5 opacity-60" />}
                                         </button>
                                     </td>
                                     <td className="px-5 py-4">
                                         <div className="flex items-center gap-1.5">
                                             <ActionButton onClick={() => setDetailTruck(truck)} icon={Eye} title="View" color="slate" />
-                                            <ActionButton onClick={() => openEdit(truck)} icon={Pencil} title="Edit" color="blue" />
-                                            <ActionButton onClick={() => setDeleteConfirm(truck)} icon={Trash2} title="Delete" color="red" />
+                                            {can('UPDATE_TRUCK') && <ActionButton onClick={() => openEdit(truck)} icon={Pencil} title="Edit" color="blue" />}
+                                            {can('DELETE_TRUCK') && <ActionButton onClick={() => setDeleteConfirm(truck)} icon={Trash2} title="Delete" color="red" />}
                                         </div>
                                     </td>
                                 </tr>
@@ -224,8 +230,8 @@ const TruckListPage = () => {
                                 value
                             )}
                             className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50 ${trucks.find(t => t.id === statusDropdownId)?.status === value
-                                    ? 'text-indigo-600 font-medium'
-                                    : 'text-slate-700'
+                                ? 'text-indigo-600 font-medium'
+                                : 'text-slate-700'
                                 }`}
                         >
                             <div className={`w-2 h-2 rounded-full ${statusDot(value)}`} />

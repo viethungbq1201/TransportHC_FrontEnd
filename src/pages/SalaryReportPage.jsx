@@ -4,6 +4,7 @@ import salaryReportService from '@/services/salaryReportService';
 import userService from '@/services/userService';
 import ActionButton from '@/components/ActionButton';
 import { SalaryReportStatus, SalaryReportStatusLabels, SalaryReportStatusColors } from '@/constants/enums';
+import usePermissions from '@/hooks/usePermissions';
 
 const statusBadge = (status) => {
     const map = {
@@ -14,6 +15,7 @@ const statusBadge = (status) => {
 };
 
 const SalaryReportPage = () => {
+    const { can } = usePermissions();
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -158,8 +160,8 @@ const SalaryReportPage = () => {
             <div className="flex items-start justify-between mb-6">
                 <div><h1 className="text-2xl font-bold text-slate-900">Salary Reports</h1><p className="text-slate-500 text-sm mt-1">Manage driver salary reports</p></div>
                 <div className="flex gap-2">
-                    <button onClick={() => setShowGenerateModal(true)} className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 text-sm font-medium text-slate-700 rounded-lg hover:bg-slate-50"><FileText className="w-4 h-4" /> Generate All</button>
-                    <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700"><Plus className="w-4 h-4" /> Create Report</button>
+                    {can('CREATE_ALL_SALARY_REPORT') && <button onClick={() => setShowGenerateModal(true)} className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 text-sm font-medium text-slate-700 rounded-lg hover:bg-slate-50"><FileText className="w-4 h-4" /> Generate All</button>}
+                    {can('CREATE_1_SALARY_REPORT') && <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700"><Plus className="w-4 h-4" /> Create Report</button>}
                 </div>
             </div>
 
@@ -211,11 +213,11 @@ const SalaryReportPage = () => {
                                         <ActionButton onClick={() => { setSelectedReport(item); setShowDetailsModal(true); }} icon={Eye} title="View Details" color="indigo" />
                                         {item.status === SalaryReportStatus.PENDING && (
                                             <>
-                                                <ActionButton onClick={() => openEdit(item)} icon={Pencil} title="Edit" color="blue" />
-                                                <ActionButton onClick={() => handleMarkDone(item.reportId || item.salaryReportId)} icon={CheckCircle} title="Mark Done" color="green" />
+                                                {can('UPDATE_SALARY_REPORT') && <ActionButton onClick={() => openEdit(item)} icon={Pencil} title="Edit" color="blue" />}
+                                                {can('APPROVE_SALARY_REPORT') && <ActionButton onClick={() => handleMarkDone(item.reportId || item.salaryReportId)} icon={CheckCircle} title="Mark Done" color="green" />}
                                             </>
                                         )}
-                                        <ActionButton onClick={() => handleDelete(item.reportId || item.salaryReportId)} icon={Trash2} title="Delete" color="red" />
+                                        {can('DELETE_SALARY_REPORT') && <ActionButton onClick={() => handleDelete(item.reportId || item.salaryReportId)} icon={Trash2} title="Delete" color="red" />}
                                     </div>
                                 </td>
                             </tr>

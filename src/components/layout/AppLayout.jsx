@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { canAccessNavItem } from '@/constants/permissions';
 import {
     LayoutDashboard, Users, Truck, Route, FolderTree, Package,
     Warehouse, FileText, CalendarClock, Tag, DollarSign, ClipboardList,
@@ -127,6 +128,24 @@ const AppLayout = ({ children }) => {
 
     const closeMobile = () => setMobileOpen(false);
 
+    // Filter nav items based on user permissions
+    const filteredNavItems = useMemo(() => {
+        return navItems
+            .map(item => {
+                if (item.children) {
+                    // Filter children, keep group only if at least one child is accessible
+                    const accessibleChildren = item.children.filter(child =>
+                        canAccessNavItem(user, child.path)
+                    );
+                    if (accessibleChildren.length === 0) return null;
+                    return { ...item, children: accessibleChildren };
+                }
+                // Leaf item
+                return canAccessNavItem(user, item.path) ? item : null;
+            })
+            .filter(Boolean);
+    }, [user]);
+
     const SidebarContent = () => (
         <div className="flex flex-col h-full">
             {/* Logo */}
@@ -137,9 +156,9 @@ const AppLayout = ({ children }) => {
                 {!collapsed && <span className="text-lg font-bold text-slate-900 tracking-tight">TransportHC</span>}
             </div>
 
-            {/* Navigation */}
+            {/* Navigation — filtered by user permissions */}
             <nav className={`flex-1 py-3 px-3 space-y-1 ${collapsed ? 'overflow-visible' : 'overflow-y-auto'}`}>
-                {navItems.map((item) =>
+                {filteredNavItems.map((item) =>
                     item.children ? (
                         <NavGroup key={item.label} {...item} collapsed={collapsed} onMobileClose={closeMobile} />
                     ) : (
@@ -211,7 +230,7 @@ const AppLayout = ({ children }) => {
                                 </div>
                                 <div className="hidden sm:block text-left">
                                     <p className="text-sm font-medium text-slate-900">{user?.username || user?.name || 'User'}</p>
-                                    <p className="text-xs text-slate-500">{user?.role || 'Admin'}</p>
+                                    <p className="text-xs text-slate-500">{user?.roles?.[0] || 'User'}</p>
                                 </div>
                                 <ChevronDown className="w-4 h-4 text-slate-400" />
                             </button>

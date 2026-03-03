@@ -6,8 +6,10 @@ import transactionDetailService from '@/services/transactionDetailService';
 import transactionService from '@/services/transactionService';
 import productService from '@/services/productService';
 import inventoryService from '@/services/inventoryService';
+import usePermissions from '@/hooks/usePermissions';
 
 const TransactionDetailListPage = () => {
+    const { can } = usePermissions();
     const location = useLocation();
     const [items, setItems] = useState([]);
     const [transactions, setTransactions] = useState([]);
@@ -26,17 +28,24 @@ const TransactionDetailListPage = () => {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const [data, transData, prodData, invData] = await Promise.all([
+            const results = await Promise.allSettled([
                 transactionDetailService.getAll(),
                 transactionService.getAllTransactions(),
                 productService.getProducts(),
                 inventoryService.getInventories()
             ]);
+
+            const data = results[0].status === 'fulfilled' ? results[0].value : [];
+            const transData = results[1].status === 'fulfilled' ? results[1].value : [];
+            const prodData = results[2].status === 'fulfilled' ? results[2].value : [];
+            const invData = results[3].status === 'fulfilled' ? results[3].value : [];
+
             setItems(Array.isArray(data) ? data : []);
             setTransactions(Array.isArray(transData) ? transData : []);
             setProducts(Array.isArray(prodData) ? prodData : []);
             setInventories(Array.isArray(invData) ? invData : []);
-        } catch {
+        } catch (error) {
+            console.error(error);
             setItems([]);
             setTransactions([]);
             setProducts([]);
@@ -118,9 +127,11 @@ const TransactionDetailListPage = () => {
                     <h1 className="text-2xl font-bold text-slate-900">Transaction Details</h1>
                     <p className="text-sm text-slate-500 mt-1">{items.length} detail records</p>
                 </div>
-                <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors">
-                    <Plus className="w-4 h-4" /> Add Detail
-                </button>
+                {can('CREATE_TRANSACTION_DETAIL') && (
+                    <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors">
+                        <Plus className="w-4 h-4" /> Add Detail
+                    </button>
+                )}
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3">
@@ -170,8 +181,8 @@ const TransactionDetailListPage = () => {
                                             <td className="px-5 py-3 flex justify-end">
                                                 {isPending ? (
                                                     <div className="flex items-center gap-1.5">
-                                                        <ActionButton onClick={() => openEdit(r)} icon={Pencil} title="Edit" color="blue" />
-                                                        <ActionButton onClick={() => handleDelete(r.transactionDetailId)} icon={Trash2} title="Delete" color="red" />
+                                                        {can('UPDATE_TRANSACTION_DETAIL') && <ActionButton onClick={() => openEdit(r)} icon={Pencil} title="Edit" color="blue" />}
+                                                        {can('DELETE_TRANSACTION_DETAIL') && <ActionButton onClick={() => handleDelete(r.transactionDetailId)} icon={Trash2} title="Delete" color="red" />}
                                                     </div>
                                                 ) : (
                                                     <span className="text-xs text-slate-400 italic">No access</span>

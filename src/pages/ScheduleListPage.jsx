@@ -8,6 +8,7 @@ import truckService from '@/services/truckService';
 import routeService from '@/services/routeService';
 import transactionService from '@/services/transactionService';
 import { ScheduleStatus, ScheduleStatusLabels, ApproveStatus, ApproveStatusLabels } from '@/constants/enums';
+import usePermissions from '@/hooks/usePermissions';
 
 const statusBadge = (status) => {
     const map = {
@@ -21,6 +22,7 @@ const statusBadge = (status) => {
 };
 
 const ScheduleListPage = () => {
+    const { can } = usePermissions();
     const navigate = useNavigate();
     const [items, setItems] = useState([]);
     const [drivers, setDrivers] = useState([]);
@@ -50,19 +52,27 @@ const ScheduleListPage = () => {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const [data, driverData, truckData, routeData, transData] = await Promise.all([
+            const results = await Promise.allSettled([
                 scheduleService.getAllSchedules(),
                 userService.getUsers(),
                 truckService.getAllTrucks(),
                 routeService.getRoutes(),
                 transactionService.getAllTransactions(),
             ]);
+
+            const data = results[0].status === 'fulfilled' ? results[0].value : [];
+            const driverData = results[1].status === 'fulfilled' ? results[1].value : [];
+            const truckData = results[2].status === 'fulfilled' ? results[2].value : [];
+            const routeData = results[3].status === 'fulfilled' ? results[3].value : [];
+            const transData = results[4].status === 'fulfilled' ? results[4].value : [];
+
             setItems(Array.isArray(data) ? data : []);
             setDrivers(Array.isArray(driverData) ? driverData.filter(u => u.roles?.includes('DRIVER')) : []);
             setTrucks(Array.isArray(truckData) ? truckData : []);
             setRoutes(Array.isArray(routeData) ? routeData : []);
             setTransactions(Array.isArray(transData) ? transData : []);
-        } catch {
+        } catch (error) {
+            console.error(error);
             setItems([]);
             setDrivers([]);
             setTrucks([]);
@@ -145,7 +155,7 @@ const ScheduleListPage = () => {
         <div>
             <div className="flex items-start justify-between mb-6">
                 <div><h1 className="text-2xl font-bold text-slate-900">Schedule Management</h1><p className="text-slate-500 text-sm mt-1">Manage transportation schedules</p></div>
-                <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700"><Plus className="w-4 h-4" /> Add Schedule</button>
+                {can('CREATE_SCHEDULE') && <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700"><Plus className="w-4 h-4" /> Add Schedule</button>}
             </div>
             <div className="flex flex-col sm:flex-row gap-3 mb-4">
                 <div className="relative flex-1 max-w-md"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" /><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by code, driver, truck, or route..." className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400" /></div>
@@ -199,14 +209,14 @@ const ScheduleListPage = () => {
                                     <div className="flex items-center gap-1.5 flex-wrap">
                                         <ActionButton onClick={() => navigate('/transaction-details', { state: { transactionId: item.transaction?.transactionId } })} icon={Eye} title="View Transaction" color="indigo" />
                                         {item.approveStatus === ScheduleStatus.PENDING && <>
-                                            <ActionButton onClick={() => handleApprove(item.scheduleId || item.id)} icon={CheckCircle} title="Approve (To In Transit)" color="green" />
-                                            <ActionButton onClick={() => handleReject(item.scheduleId || item.id)} icon={XCircle} title="Reject" color="amber" />
-                                            <ActionButton onClick={() => openEdit(item)} icon={Pencil} title="Edit" color="blue" />
-                                            <ActionButton onClick={() => handleDelete(item.scheduleId || item.id)} icon={Trash2} title="Delete" color="red" />
+                                            {can('APPROVE_SCHEDULE') && <ActionButton onClick={() => handleApprove(item.scheduleId || item.id)} icon={CheckCircle} title="Approve (To In Transit)" color="green" />}
+                                            {can('REJECT_SCHEDULE') && <ActionButton onClick={() => handleReject(item.scheduleId || item.id)} icon={XCircle} title="Reject" color="amber" />}
+                                            {can('UPDATE_SCHEDULE') && <ActionButton onClick={() => openEdit(item)} icon={Pencil} title="Edit" color="blue" />}
+                                            {can('DELETE_SCHEDULE') && <ActionButton onClick={() => handleDelete(item.scheduleId || item.id)} icon={Trash2} title="Delete" color="red" />}
                                         </>}
                                         {item.approveStatus === ScheduleStatus.IN_TRANSIT && <>
-                                            <ActionButton onClick={() => openEndModal(item.scheduleId || item.id)} icon={StopCircle} title="End Schedule (To Done)" color="indigo" />
-                                            <ActionButton onClick={() => handleCancel(item.scheduleId || item.id)} icon={Ban} title="Cancel Schedule" color="amber" />
+                                            {can('END_SCHEDULE') && <ActionButton onClick={() => openEndModal(item.scheduleId || item.id)} icon={StopCircle} title="End Schedule (To Done)" color="indigo" />}
+                                            {can('CANCEL_SCHEDULE') && <ActionButton onClick={() => handleCancel(item.scheduleId || item.id)} icon={Ban} title="Cancel Schedule" color="amber" />}
                                         </>}
                                     </div>
                                 </td>

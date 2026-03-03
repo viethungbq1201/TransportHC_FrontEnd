@@ -4,6 +4,7 @@ import ActionButton from '@/components/ActionButton';
 import inventoryService from '@/services/inventoryService';
 import productService from '@/services/productService';
 import categoryService from '@/services/categoryService';
+import usePermissions from '@/hooks/usePermissions';
 
 const formatPrice = (price) => {
     if (!price && price !== 0) return '-';
@@ -17,7 +18,19 @@ const formatDate = (d) => {
     } catch { return '-'; }
 };
 
+const formatCurrency = (val) => {
+    const num = Number(val);
+    return isNaN(num) ? '$0' : `$${num.toLocaleString()}`;
+};
+
+const quantityBadge = (quantity) => {
+    if (quantity <= 0) return 'bg-red-50 text-red-700 border-red-200';
+    if (quantity < 20) return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+    return 'bg-green-50 text-green-700 border-green-200';
+};
+
 const InventoryListPage = () => {
+    const { can } = usePermissions();
     const [items, setItems] = useState([]);
     const [allItems, setAllItems] = useState([]);
     const [products, setProducts] = useState([]);
@@ -52,12 +65,18 @@ const InventoryListPage = () => {
     const fetchData = async (page = currentPage) => {
         setLoading(true);
         try {
-            const [pageData, allInvData, prodData, catData] = await Promise.all([
+            const results = await Promise.allSettled([
                 inventoryService.getInventoriesPaged(page, PAGE_SIZE),
                 inventoryService.getInventories(),
                 productService.getProducts(),
                 categoryService.getCategories(),
             ]);
+
+            const pageData = results[0].status === 'fulfilled' ? results[0].value : null;
+            const allInvData = results[1].status === 'fulfilled' ? results[1].value : [];
+            const prodData = results[2].status === 'fulfilled' ? results[2].value : [];
+            const catData = results[3].status === 'fulfilled' ? results[3].value : [];
+
             setItems(pageData?.content || []);
             setCurrentPage(pageData?.page || 0);
             setTotalPages(pageData?.totalPages || 0);
@@ -65,7 +84,8 @@ const InventoryListPage = () => {
             setAllItems(Array.isArray(allInvData) ? allInvData : []);
             setProducts(Array.isArray(prodData) ? prodData : []);
             setCategories(Array.isArray(catData) ? catData : []);
-        } catch {
+        } catch (error) {
+            console.error(error);
             setItems([]);
             setAllItems([]);
             setProducts([]);
@@ -218,9 +238,11 @@ const InventoryListPage = () => {
                     <button onClick={handleExport} disabled={exporting} className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 text-sm font-medium text-slate-700 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50">
                         <Download className="w-4 h-4" /> {exporting ? 'Exporting...' : 'Export'}
                     </button>
-                    <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
-                        <Plus className="w-4 h-4" /> Add Inventory
-                    </button>
+                    {can('CREATE_INVENTORY') && (
+                        <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
+                            <Plus className="w-4 h-4" /> Add Inventory
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -449,8 +471,8 @@ const InventoryListPage = () => {
                                     <td className="px-5 py-4">
                                         <div className="flex items-center gap-1.5">
                                             <ActionButton onClick={() => setDetailItem(item)} icon={Eye} title="View" color="slate" />
-                                            <ActionButton onClick={() => openEdit(item)} icon={Pencil} title="Edit" color="blue" />
-                                            <ActionButton onClick={() => setDeleteConfirm(item)} icon={Trash2} title="Delete" color="red" />
+                                            {can('UPDATE_INVENTORY') && <ActionButton onClick={() => openEdit(item)} icon={Pencil} title="Edit" color="blue" />}
+                                            {can('DELETE_INVENTORY') && <ActionButton onClick={() => setDeleteConfirm(item)} icon={Trash2} title="Delete" color="red" />}
                                         </div>
                                     </td>
                                 </tr>

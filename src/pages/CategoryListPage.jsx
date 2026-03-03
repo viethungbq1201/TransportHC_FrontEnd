@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Search, Pencil, Trash2, X, FolderTree, Eye } from 'lucide-react';
 import ActionButton from '@/components/ActionButton';
 import categoryService from '@/services/categoryService';
+import usePermissions from '@/hooks/usePermissions';
 
 const CategoryListPage = () => {
+    const { can } = usePermissions();
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -70,9 +72,11 @@ const CategoryListPage = () => {
                     <h1 className="text-2xl font-bold text-slate-900">Category Management</h1>
                     <p className="text-slate-500 text-sm mt-1">Manage product categories</p>
                 </div>
-                <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
-                    <Plus className="w-4 h-4" /> Add Category
-                </button>
+                {can('CREATE_CATEGORY') && (
+                    <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
+                        <Plus className="w-4 h-4" /> Add Category
+                    </button>
+                )}
             </div>
 
             {/* Search */}
@@ -114,8 +118,8 @@ const CategoryListPage = () => {
                                     <td className="px-5 py-4">
                                         <div className="flex items-center gap-1.5">
                                             <ActionButton onClick={() => setDetailItem(item)} icon={Eye} title="View" color="slate" />
-                                            <ActionButton onClick={() => openEdit(item)} icon={Pencil} title="Edit" color="blue" />
-                                            <ActionButton onClick={() => setDeleteConfirm(item)} icon={Trash2} title="Delete" color="red" />
+                                            {can('UPDATE_CATEGORY') && <ActionButton onClick={() => openEdit(item)} icon={Pencil} title="Edit" color="blue" />}
+                                            {can('DELETE_CATEGORY') && <ActionButton onClick={() => setDeleteConfirm(item)} icon={Trash2} title="Delete" color="red" />}
                                         </div>
                                     </td>
                                 </tr>

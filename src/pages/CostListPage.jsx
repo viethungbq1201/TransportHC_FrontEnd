@@ -5,6 +5,7 @@ import costService from '@/services/costService';
 import scheduleService from '@/services/scheduleService';
 import costTypeService from '@/services/costTypeService';
 import { ApproveStatus, ApproveStatusLabels, ScheduleStatus } from '@/constants/enums';
+import usePermissions from '@/hooks/usePermissions';
 
 const approveBadge = (status) => {
     const map = {
@@ -16,6 +17,7 @@ const approveBadge = (status) => {
 };
 
 const CostListPage = () => {
+    const { can } = usePermissions();
     const [items, setItems] = useState([]);
     const [schedules, setSchedules] = useState([]);
     const [costTypes, setCostTypes] = useState([]);
@@ -31,15 +33,21 @@ const CostListPage = () => {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const [data, scheduleData, typeData] = await Promise.all([
+            const results = await Promise.allSettled([
                 costService.getAllCosts(),
                 scheduleService.getAllSchedules(),
                 costTypeService.getCostTypes()
             ]);
+
+            const data = results[0].status === 'fulfilled' ? results[0].value : [];
+            const scheduleData = results[1].status === 'fulfilled' ? results[1].value : [];
+            const typeData = results[2].status === 'fulfilled' ? results[2].value : [];
+
             setItems(Array.isArray(data) ? data : []);
             setSchedules(Array.isArray(scheduleData) ? scheduleData : []);
             setCostTypes(Array.isArray(typeData) ? typeData : []);
-        } catch {
+        } catch (error) {
+            console.error(error);
             setItems([]);
             setSchedules([]);
             setCostTypes([]);
@@ -113,7 +121,7 @@ const CostListPage = () => {
         <div>
             <div className="flex items-start justify-between mb-6">
                 <div><h1 className="text-2xl font-bold text-slate-900">Cost Management</h1><p className="text-slate-500 text-sm mt-1">Manage schedule costs and expenses</p></div>
-                <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700"><Plus className="w-4 h-4" /> Add Cost</button>
+                {can('CREATE_COST') && <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700"><Plus className="w-4 h-4" /> Add Cost</button>}
             </div>
             <div className="flex gap-3 mb-4">
                 <div className="relative flex-1 max-w-md">
@@ -164,10 +172,10 @@ const CostListPage = () => {
                                             <div className="flex items-center gap-1.5">
                                                 {item.approveStatus === ApproveStatus.PENDING ? (
                                                     <>
-                                                        <ActionButton onClick={() => handleApprove(item.costId)} icon={CheckCircle} title="Approve" color="green" />
-                                                        <ActionButton onClick={() => handleReject(item.costId)} icon={XCircle} title="Reject" color="amber" />
-                                                        <ActionButton onClick={() => openEdit(item)} icon={Pencil} title="Edit" color="blue" />
-                                                        <ActionButton onClick={() => handleDelete(item.costId)} icon={Trash2} title="Delete" color="red" />
+                                                        {can('APPROVE_COST') && <ActionButton onClick={() => handleApprove(item.costId)} icon={CheckCircle} title="Approve" color="green" />}
+                                                        {can('REJECT_COST') && <ActionButton onClick={() => handleReject(item.costId)} icon={XCircle} title="Reject" color="amber" />}
+                                                        {can('UPDATE_COST') && <ActionButton onClick={() => openEdit(item)} icon={Pencil} title="Edit" color="blue" />}
+                                                        {can('DELETE_COST') && <ActionButton onClick={() => handleDelete(item.costId)} icon={Trash2} title="Delete" color="red" />}
                                                     </>
                                                 ) : <span className="text-xs text-slate-400 italic">Locked</span>}
                                             </div>

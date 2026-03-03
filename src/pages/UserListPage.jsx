@@ -3,8 +3,10 @@ import { Plus, Search, Pencil, Trash2, X, Users as UsersIcon, Eye, ChevronDown }
 import ActionButton from '@/components/ActionButton';
 import userService from '@/services/userService';
 import { RoleCode, RoleCodeLabels, UserStatus, UserStatusLabels, UserStatusColors } from '@/constants/enums';
+import usePermissions from '@/hooks/usePermissions';
 
 const UserListPage = () => {
+    const { can } = usePermissions();
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -192,9 +194,11 @@ const UserListPage = () => {
                     <h1 className="text-2xl font-bold text-slate-900">User Management</h1>
                     <p className="text-slate-500 text-sm mt-1">Manage system users and their roles</p>
                 </div>
-                <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 shadow-sm">
-                    <Plus className="w-4 h-4" /> Add User
-                </button>
+                {can('CREATE_USER') && (
+                    <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 shadow-sm">
+                        <Plus className="w-4 h-4" /> Add User
+                    </button>
+                )}
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 mb-4">
@@ -273,6 +277,7 @@ const UserListPage = () => {
                                         <button
                                             ref={el => { statusBtnRef.current[user.id] = el; }}
                                             onClick={(e) => {
+                                                if (!can('UPDATE_STATUS_USER')) return;
                                                 if (statusDropdownId === user.id) {
                                                     setStatusDropdownId(null);
                                                 } else {
@@ -281,18 +286,19 @@ const UserListPage = () => {
                                                     setStatusDropdownId(user.id);
                                                 }
                                             }}
-                                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border cursor-pointer hover:shadow-sm transition-shadow ${statusBadge(user.status)}`}
+                                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${can('UPDATE_STATUS_USER') ? 'cursor-pointer hover:shadow-sm transition-shadow' : 'cursor-default'} ${statusBadge(user.status)}`}
+                                            disabled={!can('UPDATE_STATUS_USER')}
                                         >
                                             <div className={`w-1.5 h-1.5 rounded-full ${statusDot(user.status)}`} />
                                             {UserStatusLabels[user.status] || user.status || 'Unknown'}
-                                            <ChevronDown className="w-3 h-3 ml-0.5 opacity-60" />
+                                            {can('UPDATE_STATUS_USER') && <ChevronDown className="w-3 h-3 ml-0.5 opacity-60" />}
                                         </button>
                                     </td>
                                     <td className="px-5 py-4">
                                         <div className="flex items-center gap-1.5">
                                             <ActionButton onClick={() => setDetailUser(user)} icon={Eye} title="View" color="slate" />
-                                            <ActionButton onClick={() => openEdit(user)} icon={Pencil} title="Edit" color="blue" />
-                                            <ActionButton onClick={() => setDeleteConfirm(user)} icon={Trash2} title="Delete" color="red" />
+                                            {can('UPDATE_USER') && <ActionButton onClick={() => openEdit(user)} icon={Pencil} title="Edit" color="blue" />}
+                                            {can('DELETE_USER') && <ActionButton onClick={() => setDeleteConfirm(user)} icon={Trash2} title="Delete" color="red" />}
                                         </div>
                                     </td>
                                 </tr>

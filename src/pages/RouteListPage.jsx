@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Search, Pencil, Trash2, X, MapPin, Eye } from 'lucide-react';
 import ActionButton from '@/components/ActionButton';
 import routeService from '@/services/routeService';
+import usePermissions from '@/hooks/usePermissions';
 
 const RouteListPage = () => {
+    const { can } = usePermissions();
     const [routes, setRoutes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -84,9 +86,11 @@ const RouteListPage = () => {
                     <h1 className="text-2xl font-bold text-slate-900">Route Management</h1>
                     <p className="text-slate-500 text-sm mt-1">Manage transportation routes</p>
                 </div>
-                <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
-                    <Plus className="w-4 h-4" /> Add Route
-                </button>
+                {can('CREATE_ROUTE') && (
+                    <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
+                        <Plus className="w-4 h-4" /> Add Route
+                    </button>
+                )}
             </div>
 
             {/* Search */}
@@ -134,8 +138,8 @@ const RouteListPage = () => {
                                     <td className="px-5 py-4">
                                         <div className="flex items-center gap-1.5">
                                             <ActionButton onClick={() => setDetailRoute(route)} icon={Eye} title="View" color="slate" />
-                                            <ActionButton onClick={() => openEdit(route)} icon={Pencil} title="Edit" color="blue" />
-                                            <ActionButton onClick={() => setDeleteConfirm(route)} icon={Trash2} title="Delete" color="red" />
+                                            {can('UPDATE_ROUTE') && <ActionButton onClick={() => openEdit(route)} icon={Pencil} title="Edit" color="blue" />}
+                                            {can('DELETE_ROUTE') && <ActionButton onClick={() => setDeleteConfirm(route)} icon={Trash2} title="Delete" color="red" />}
                                         </div>
                                     </td>
                                 </tr>

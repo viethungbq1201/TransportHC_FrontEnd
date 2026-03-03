@@ -3,6 +3,7 @@ import { Plus, Search, Pencil, Trash2, X, Package, Eye, ChevronLeft, ChevronRigh
 import ActionButton from '@/components/ActionButton';
 import productService from '@/services/productService';
 import categoryService from '@/services/categoryService';
+import usePermissions from '@/hooks/usePermissions';
 
 const formatPrice = (price) => {
     if (!price && price !== 0) return '-';
@@ -10,6 +11,7 @@ const formatPrice = (price) => {
 };
 
 const ProductListPage = () => {
+    const { can } = usePermissions();
     const [items, setItems] = useState([]);
     const [allItems, setAllItems] = useState([]);
     const [categories, setCategories] = useState([]);
@@ -32,18 +34,24 @@ const ProductListPage = () => {
     const fetchData = async (page = currentPage) => {
         setLoading(true);
         try {
-            const [pageData, allProdData, catData] = await Promise.all([
+            const results = await Promise.allSettled([
                 productService.getProductsPaged(page, PAGE_SIZE),
                 productService.getProducts(),
                 categoryService.getCategories(),
             ]);
+
+            const pageData = results[0].status === 'fulfilled' ? results[0].value : null;
+            const allProdData = results[1].status === 'fulfilled' ? results[1].value : [];
+            const catData = results[2].status === 'fulfilled' ? results[2].value : [];
+
             setItems(pageData?.content || []);
             setCurrentPage(pageData?.page || 0);
             setTotalPages(pageData?.totalPages || 0);
             setTotalElements(pageData?.totalElements || 0);
             setAllItems(Array.isArray(allProdData) ? allProdData : []);
             setCategories(Array.isArray(catData) ? catData : []);
-        } catch {
+        } catch (error) {
+            console.error(error);
             setItems([]);
             setAllItems([]);
             setCategories([]);
@@ -118,9 +126,11 @@ const ProductListPage = () => {
                     <h1 className="text-2xl font-bold text-slate-900">Product Management</h1>
                     <p className="text-slate-500 text-sm mt-1">Manage your product catalog</p>
                 </div>
-                <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
-                    <Plus className="w-4 h-4" /> Add Product
-                </button>
+                {can('CREATE_PRODUCT') && (
+                    <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
+                        <Plus className="w-4 h-4" /> Add Product
+                    </button>
+                )}
             </div>
 
             {/* Filters */}
@@ -176,8 +186,8 @@ const ProductListPage = () => {
                                     <td className="px-5 py-4">
                                         <div className="flex items-center gap-1.5">
                                             <ActionButton onClick={() => setDetailItem(item)} icon={Eye} title="View" color="slate" />
-                                            <ActionButton onClick={() => openEdit(item)} icon={Pencil} title="Edit" color="blue" />
-                                            <ActionButton onClick={() => setDeleteConfirm(item)} icon={Trash2} title="Delete" color="red" />
+                                            {can('UPDATE_PRODUCT') && <ActionButton onClick={() => openEdit(item)} icon={Pencil} title="Edit" color="blue" />}
+                                            {can('DELETE_PRODUCT') && <ActionButton onClick={() => setDeleteConfirm(item)} icon={Trash2} title="Delete" color="red" />}
                                         </div>
                                     </td>
                                 </tr>

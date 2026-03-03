@@ -33,22 +33,100 @@ function App() {
                         {/* Public */}
                         <Route path="/login" element={<LoginPage />} />
 
-                        {/* Protected */}
+                        {/* Protected — any authenticated user */}
                         <Route element={<ProtectedRoute />}>
                             <Route element={<AppLayout><DashboardPage /></AppLayout>} path="/dashboard" />
-                            <Route element={<AppLayout><UserListPage /></AppLayout>} path="/users" />
-                            <Route element={<AppLayout><TruckListPage /></AppLayout>} path="/trucks" />
-                            <Route element={<AppLayout><RouteListPage /></AppLayout>} path="/routes" />
-                            <Route element={<AppLayout><CategoryListPage /></AppLayout>} path="/categories" />
-                            <Route element={<AppLayout><ProductListPage /></AppLayout>} path="/products" />
-                            <Route element={<AppLayout><InventoryListPage /></AppLayout>} path="/inventory" />
-                            <Route element={<AppLayout><TransactionListPage /></AppLayout>} path="/transactions" />
-                            <Route element={<AppLayout><TransactionDetailListPage /></AppLayout>} path="/transaction-details" />
-                            <Route element={<AppLayout><ScheduleListPage /></AppLayout>} path="/schedules" />
-                            <Route element={<AppLayout><CostTypeListPage /></AppLayout>} path="/cost-types" />
-                            <Route element={<AppLayout><CostListPage /></AppLayout>} path="/costs" />
-                            <Route element={<AppLayout><SalaryReportPage /></AppLayout>} path="/salary-reports" />
-                            <Route element={<AppLayout><ReportPage /></AppLayout>} path="/reports" />
+
+                            {/* Users — requires VIEW_USER permission */}
+                            <Route element={
+                                <ProtectedRoute requiredPermissions={['VIEW_USER']}>
+                                    <AppLayout><UserListPage /></AppLayout>
+                                </ProtectedRoute>
+                            } path="/users" />
+
+                            {/* Trucks — requires VIEW_TRUCK permission */}
+                            <Route element={
+                                <ProtectedRoute requiredPermissions={['VIEW_TRUCK']}>
+                                    <AppLayout><TruckListPage /></AppLayout>
+                                </ProtectedRoute>
+                            } path="/trucks" />
+
+                            {/* Routes — requires VIEW_ROUTE permission */}
+                            <Route element={
+                                <ProtectedRoute requiredPermissions={['VIEW_ROUTE']}>
+                                    <AppLayout><RouteListPage /></AppLayout>
+                                </ProtectedRoute>
+                            } path="/routes" />
+
+                            {/* Categories — requires VIEW_CATEGORY permission */}
+                            <Route element={
+                                <ProtectedRoute requiredPermissions={['VIEW_CATEGORY']}>
+                                    <AppLayout><CategoryListPage /></AppLayout>
+                                </ProtectedRoute>
+                            } path="/categories" />
+
+                            {/* Products — requires VIEW_PRODUCT permission */}
+                            <Route element={
+                                <ProtectedRoute requiredPermissions={['VIEW_PRODUCT']}>
+                                    <AppLayout><ProductListPage /></AppLayout>
+                                </ProtectedRoute>
+                            } path="/products" />
+
+                            {/* Inventory — requires VIEW_INVENTORY permission */}
+                            <Route element={
+                                <ProtectedRoute requiredPermissions={['VIEW_INVENTORY']}>
+                                    <AppLayout><InventoryListPage /></AppLayout>
+                                </ProtectedRoute>
+                            } path="/inventory" />
+
+                            {/* Transactions — requires VIEW_TRANSACTION permission */}
+                            <Route element={
+                                <ProtectedRoute requiredPermissions={['VIEW_TRANSACTION']}>
+                                    <AppLayout><TransactionListPage /></AppLayout>
+                                </ProtectedRoute>
+                            } path="/transactions" />
+
+                            {/* Transaction Details — requires VIEW_TRANSACTION_DETAIL permission */}
+                            <Route element={
+                                <ProtectedRoute requiredPermissions={['VIEW_TRANSACTION_DETAIL']}>
+                                    <AppLayout><TransactionDetailListPage /></AppLayout>
+                                </ProtectedRoute>
+                            } path="/transaction-details" />
+
+                            {/* Schedules — requires VIEW_SCHEDULE permission */}
+                            <Route element={
+                                <ProtectedRoute requiredPermissions={['VIEW_SCHEDULE']}>
+                                    <AppLayout><ScheduleListPage /></AppLayout>
+                                </ProtectedRoute>
+                            } path="/schedules" />
+
+                            {/* Cost Types — requires VIEW_COST_TYPE permission */}
+                            <Route element={
+                                <ProtectedRoute requiredPermissions={['VIEW_COST_TYPE']}>
+                                    <AppLayout><CostTypeListPage /></AppLayout>
+                                </ProtectedRoute>
+                            } path="/cost-types" />
+
+                            {/* Costs — requires VIEW_COST permission */}
+                            <Route element={
+                                <ProtectedRoute requiredPermissions={['VIEW_COST']}>
+                                    <AppLayout><CostListPage /></AppLayout>
+                                </ProtectedRoute>
+                            } path="/costs" />
+
+                            {/* Salary Reports — requires VIEW_SALARY_REPORT permission */}
+                            <Route element={
+                                <ProtectedRoute requiredPermissions={['VIEW_SALARY_REPORT']}>
+                                    <AppLayout><SalaryReportPage /></AppLayout>
+                                </ProtectedRoute>
+                            } path="/salary-reports" />
+
+                            {/* Reports — ADMIN, MANAGER, ACCOUNTANT */}
+                            <Route element={
+                                <ProtectedRoute requiredRoles={['ADMIN', 'MANAGER', 'ACCOUNTANT']}>
+                                    <AppLayout><ReportPage /></AppLayout>
+                                </ProtectedRoute>
+                            } path="/reports" />
                         </Route>
 
                         {/* Redirects */}
