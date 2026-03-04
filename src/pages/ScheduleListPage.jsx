@@ -10,15 +10,16 @@ import transactionService from '@/services/transactionService';
 import { ScheduleStatus, ScheduleStatusLabels, ApproveStatus, ApproveStatusLabels } from '@/constants/enums';
 import usePermissions from '@/hooks/usePermissions';
 
+// Modernized and Accessible Status Badges with Dark Mode Support
 const statusBadge = (status) => {
     const map = {
-        [ScheduleStatus.PENDING]: 'bg-amber-50 text-amber-700 border-amber-200',
-        [ScheduleStatus.IN_TRANSIT]: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-        [ScheduleStatus.DONE]: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-        [ScheduleStatus.CANCELLED]: 'bg-slate-100 text-slate-800 border-slate-200',
-        [ScheduleStatus.REJECTED]: 'bg-red-50 text-red-700 border-red-200',
+        [ScheduleStatus.PENDING]: 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20',
+        [ScheduleStatus.IN_TRANSIT]: 'bg-indigo-100 text-indigo-800 border-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-400 dark:border-indigo-500/20',
+        [ScheduleStatus.DONE]: 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20',
+        [ScheduleStatus.CANCELLED]: 'bg-slate-100 text-slate-800 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
+        [ScheduleStatus.REJECTED]: 'bg-red-100 text-red-800 border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20',
     };
-    return map[status] || 'bg-slate-50 text-slate-600 border-slate-200';
+    return map[status] || 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700';
 };
 
 const ScheduleListPage = () => {
@@ -152,154 +153,325 @@ const ScheduleListPage = () => {
     const confirmDelete = async () => { if (!deleteConfirmId) return; try { await scheduleService.deleteSchedule(deleteConfirmId); fetchData(); setDeleteConfirmId(null); } catch (err) { alert(err?.message || 'Error'); } };
 
     return (
-        <div>
-            <div className="flex items-start justify-between mb-6">
-                <div><h1 className="text-2xl font-bold text-slate-900">Schedule Management</h1><p className="text-slate-500 text-sm mt-1">Manage transportation schedules</p></div>
-                {can('CREATE_SCHEDULE') && <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700"><Plus className="w-4 h-4" /> Add Schedule</button>}
-            </div>
-            <div className="flex flex-col sm:flex-row gap-3 mb-4">
-                <div className="relative flex-1 max-w-md"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" /><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by code, driver, truck, or route..." className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400" /></div>
-                <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-700">
-                    <option value="">All Status</option>
-                    {Object.values(ScheduleStatus).map((status) => (
-                        <option key={status} value={status}>{ScheduleStatusLabels[status]}</option>
-                    ))}
-                </select>
+        <div className="min-h-full bg-slate-50/50 dark:bg-slate-950/50 text-slate-900 dark:text-slate-100 transition-colors duration-300">
+            {/* Header Area with Subtle Gradient */}
+            <div className="relative mb-8 pb-4 border-b border-slate-200 dark:border-slate-800">
+                <div className="absolute inset-0 bg-gradient-to-r from-indigo-50/50 to-transparent dark:from-indigo-900/10 pointer-events-none rounded-t-2xl"></div>
+                <div className="relative flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    <div>
+                        <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">Schedule Management</h1>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Manage and track your transportation fleet schedules.</p>
+                    </div>
+                    {can('CREATE_SCHEDULE') && (
+                        <button
+                            onClick={openCreate}
+                            className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-sm hover:shadow-md transform active:scale-95 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
+                        >
+                            <Plus className="w-5 h-5" /> Add Schedule
+                        </button>
+                    )}
+                </div>
             </div>
 
-            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-                {loading ? (<div className="flex items-center justify-center h-48"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" /></div>
-                ) : filtered.length === 0 ? (<div className="flex flex-col items-center justify-center py-16 text-slate-400"><CalendarClock className="w-12 h-12 mb-3 opacity-30" /><p className="text-sm">No schedules found</p></div>
+            {/* Sticky Filters & Search Control Bar */}
+            <div className="sticky top-0 z-10 bg-slate-50/80 dark:bg-slate-950/80 backdrop-blur-md py-4 -my-4 mb-4 flex flex-col sm:flex-row gap-4 justify-between items-center transition-colors duration-300">
+                <div className="relative w-full sm:max-w-md group">
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors duration-200" />
+                    <input
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                        placeholder="Search by code, driver, truck, or route..."
+                        className="w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 dark:focus:ring-indigo-400/50 transition-all duration-200"
+                    />
+                </div>
+                <div className="relative w-full sm:w-auto">
+                    <select
+                        value={statusFilter}
+                        onChange={e => setStatusFilter(e.target.value)}
+                        className="w-full sm:w-48 px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 dark:focus:ring-indigo-400/50 appearance-none cursor-pointer transition-all duration-200"
+                    >
+                        <option value="">All Statuses</option>
+                        {Object.values(ScheduleStatus).map((status) => (
+                            <option key={status} value={status}>{ScheduleStatusLabels[status]}</option>
+                        ))}
+                    </select>
+                    {/* Custom Dropdown Arrow to replace standard browser styling */}
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500 dark:text-slate-400">
+                        <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" /></svg>
+                    </div>
+                </div>
+            </div>
+
+            {/* Modern Card Table Wrapper */}
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden transition-colors duration-300">
+                {loading ? (
+                    <div className="flex items-center justify-center h-64">
+                        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600 dark:border-indigo-400"></div>
+                    </div>
+                ) : filtered.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-24 text-slate-400 dark:text-slate-500">
+                        <CalendarClock className="w-16 h-16 mb-4 opacity-40 dark:opacity-30" />
+                        <p className="text-base font-semibold text-slate-600 dark:text-slate-300">No schedules found</p>
+                        <p className="text-sm mt-1">Try adjusting your search criteria.</p>
+                    </div>
                 ) : (
-                    <table className="w-full"><thead><tr className="border-b border-slate-200">
-                        <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">ID</th>
-                        <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Driver / Truck</th>
-                        <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Route Info</th>
-                        <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Start / End Date</th>
-                        <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Reward / Proof</th>
-                        <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
-                        <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
-                    </tr></thead>
-                        <tbody>{filtered.map(item => (
-                            <tr key={item.id} className="border-b border-slate-100 hover:bg-slate-50/50">
-                                <td className="px-5 py-3.5 text-sm font-medium text-slate-900">#{item.scheduleId || item.id}</td>
-                                <td className="px-5 py-3.5 text-sm">
-                                    <div className="font-medium text-slate-900">{item.driver?.fullName || '-'}</div>
-                                    <div className="text-slate-500 text-xs mt-0.5">{item.truck?.licensePlate || '-'}</div>
-                                </td>
-                                <td className="px-5 py-3.5 text-sm">
-                                    <div className="text-slate-900">{item.route ? item.route.name : '-'}</div>
-                                    <div className="text-slate-500 text-xs mt-0.5">{item.route ? `${item.route.start_point || item.route.startPoint} → ${item.route.end_point || item.route.endPoint}` : ''}</div>
-                                </td>
-                                <td className="px-5 py-3.5 text-sm">
-                                    <div className="text-slate-900">{formatDate(item.startDate)}</div>
-                                    <div className="text-slate-500 text-xs mt-0.5">{item.endDate ? formatDate(item.endDate) : 'TBD'}</div>
-                                </td>
-                                <td className="px-5 py-3.5 text-sm text-slate-600">
-                                    <div className="font-medium text-emerald-600">{item.reward ? `${item.reward.toLocaleString()} ₫` : '-'}</div>
-                                    <div className="text-slate-500 text-xs mt-0.5 ">{item.documentaryProof || 'No proof'}</div>
-                                </td>
-                                <td className="px-5 py-3.5">
-                                    <span className={`inline-flex px-2.5 py-0.5 text-xs font-medium rounded-full border ${statusBadge(item.approveStatus)}`}>
-                                        {ScheduleStatusLabels[item.approveStatus] || item.approveStatus}
-                                    </span>
-                                    {item.approveBy && <div className="text-[10px] text-slate-400 mt-1">By: {item.approveBy.fullName}</div>}
-                                </td>
-                                <td className="px-5 py-3.5">
-                                    <div className="flex items-center gap-1.5 flex-wrap">
-                                        <ActionButton onClick={() => navigate('/transaction-details', { state: { transactionId: item.transaction?.transactionId } })} icon={Eye} title="View Transaction" color="indigo" />
-                                        {item.approveStatus === ScheduleStatus.PENDING && <>
-                                            {can('APPROVE_SCHEDULE') && <ActionButton onClick={() => handleApprove(item.scheduleId || item.id)} icon={CheckCircle} title="Approve (To In Transit)" color="green" />}
-                                            {can('REJECT_SCHEDULE') && <ActionButton onClick={() => handleReject(item.scheduleId || item.id)} icon={XCircle} title="Reject" color="amber" />}
-                                            {can('UPDATE_SCHEDULE') && <ActionButton onClick={() => openEdit(item)} icon={Pencil} title="Edit" color="blue" />}
-                                            {can('DELETE_SCHEDULE') && <ActionButton onClick={() => handleDelete(item.scheduleId || item.id)} icon={Trash2} title="Delete" color="red" />}
-                                        </>}
-                                        {item.approveStatus === ScheduleStatus.IN_TRANSIT && <>
-                                            {can('END_SCHEDULE') && <ActionButton onClick={() => openEndModal(item.scheduleId || item.id)} icon={StopCircle} title="End Schedule (To Done)" color="indigo" />}
-                                            {can('CANCEL_SCHEDULE') && <ActionButton onClick={() => handleCancel(item.scheduleId || item.id)} icon={Ban} title="Cancel Schedule" color="amber" />}
-                                        </>}
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}</tbody></table>
+                    <div className="overflow-x-auto">
+                        <table className="w-full whitespace-nowrap">
+                            <thead>
+                                <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800 transition-colors duration-300">
+                                    <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Schedule ID</th>
+                                    <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Driver / Truck</th>
+                                    <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Route Info</th>
+                                    <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Duration</th>
+                                    <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Financials / Proof</th>
+                                    <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
+                                    <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider sticky right-0 bg-slate-50 dark:bg-slate-800/50">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                                {filtered.map(item => (
+                                    <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors duration-200 group">
+                                        <td className="px-6 py-4">
+                                            <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-mono font-medium border border-slate-200 dark:border-slate-700">
+                                                #{item.scheduleId || item.id}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 text-sm">
+                                            <div className="font-semibold text-slate-900 dark:text-slate-100">{item.driver?.fullName || 'Not assigned'}</div>
+                                            <div className="text-slate-500 dark:text-slate-400 text-xs mt-1 flex items-center gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
+                                                <span className="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-600"></span>
+                                                {item.truck?.licensePlate || 'No truck'}
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 text-sm">
+                                            <div className="font-semibold text-slate-900 dark:text-slate-100">{item.route ? item.route.name : 'Unspecified'}</div>
+                                            <div className="text-slate-500 dark:text-slate-400 text-xs mt-1 max-w-[200px] truncate">
+                                                {item.route ? `${item.route.start_point || item.route.startPoint} ➝ ${item.route.end_point || item.route.endPoint}` : ''}
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 text-sm">
+                                            <div className="font-medium text-slate-800 dark:text-slate-200">{formatDate(item.startDate)}</div>
+                                            <div className="text-slate-500 dark:text-slate-400 text-xs mt-1">End: {item.endDate ? formatDate(item.endDate) : 'Pending'}</div>
+                                        </td>
+                                        <td className="px-6 py-4 text-sm">
+                                            <div className="font-bold text-emerald-600 dark:text-emerald-400">{item.reward ? `${item.reward.toLocaleString()} ₫` : '0 ₫'}</div>
+                                            <div className="text-slate-500 dark:text-slate-400 text-xs mt-1 truncate max-w-[150px] italic">
+                                                {item.documentaryProof || 'No proof provided'}
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full border shadow-sm ${statusBadge(item.approveStatus)}`}>
+                                                {ScheduleStatusLabels[item.approveStatus] || item.approveStatus}
+                                            </span>
+                                            {item.approveBy && <div className="text-[10px] text-slate-400 dark:text-slate-500 mt-1.5 ml-1 font-medium">Approved by: {item.approveBy.fullName}</div>}
+                                        </td>
+                                        <td className="px-6 py-4 sticky right-0 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800/40 transition-colors duration-200 border-l border-transparent dark:border-transparent">
+                                            <div className="flex items-center gap-2">
+                                                <ActionButton onClick={() => navigate('/transaction-details', { state: { transactionId: item.transaction?.transactionId } })} icon={Eye} title="Transaction Details" color="indigo" />
+                                                {item.approveStatus === ScheduleStatus.PENDING && <>
+                                                    {can('APPROVE_SCHEDULE') && <ActionButton onClick={() => handleApprove(item.scheduleId || item.id)} icon={CheckCircle} title="Approve" color="green" />}
+                                                    {can('REJECT_SCHEDULE') && <ActionButton onClick={() => handleReject(item.scheduleId || item.id)} icon={XCircle} title="Reject" color="amber" />}
+                                                    {can('UPDATE_SCHEDULE') && <ActionButton onClick={() => openEdit(item)} icon={Pencil} title="Edit" color="blue" />}
+                                                    {can('DELETE_SCHEDULE') && <ActionButton onClick={() => handleDelete(item.scheduleId || item.id)} icon={Trash2} title="Delete" color="red" />}
+                                                </>}
+                                                {item.approveStatus === ScheduleStatus.IN_TRANSIT && <>
+                                                    {can('END_SCHEDULE') && <ActionButton onClick={() => openEndModal(item.scheduleId || item.id)} icon={StopCircle} title="End (Mark Done)" color="indigo" />}
+                                                    {can('CANCEL_SCHEDULE') && <ActionButton onClick={() => handleCancel(item.scheduleId || item.id)} icon={Ban} title="Cancel" color="amber" />}
+                                                </>}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 )}
             </div>
 
-            {/* Create/Edit Modal */}
-            {showModal && (<div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto"><div className="absolute inset-0 bg-black/30" onClick={() => setShowModal(false)} /><div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6 my-8"><div className="flex items-center justify-between mb-5"><h2 className="text-lg font-semibold text-slate-900">{editingItem ? 'Edit Schedule' : 'Add New Schedule'}</h2><button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600"><X className="w-5 h-5" /></button></div><form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Transaction</label>
-                    <select value={form.transactionId} onChange={e => setForm({ ...form, transactionId: e.target.value })} required className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
-                        <option value="">Select Transaction...</option>
-                        {transactions
-                            .filter(t => {
-                                const isApproved = t.approveStatus === 'APPROVED';
-                                const isCurrentEditing = t.transactionId === Number(form.transactionId);
-                                const isUsed = usedTransactionIds.includes(t.transactionId);
-
-                                // Chỉ cho phép:
-                                // - Approved
-                                // - Chưa bị dùng
-                                // - Hoặc là transaction hiện tại đang edit
-                                return isApproved && (!isUsed || isCurrentEditing);
-                            })
-                            .map(t => (
-                                <option key={t.transactionId} value={t.transactionId}>#{t.transactionId} - {t.transactionType} ({t.location})</option>
-                            ))}
-                    </select>
-                </div>
-                <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Driver</label>
-                    <select value={form.driverId} onChange={e => setForm({ ...form, driverId: e.target.value })} required className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
-                        <option value="">Select Driver...</option>
-                        {drivers.filter(d => d.status === 'AVAILABLE' || d.id === Number(form.driverId)).map(d => (
-                            <option key={d.id} value={d.id}>{d.fullName} ({d.phoneNumber})</option>
-                        ))}
-                    </select>
-                </div>
-                <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Truck</label>
-                    <select value={form.truckId} onChange={e => setForm({ ...form, truckId: e.target.value })} required className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
-                        <option value="">Select Truck...</option>
-                        {trucks.filter(t => t.status === 'AVAILABLE' || t.id === Number(form.truckId)).map(t => (
-                            <option key={t.id} value={t.id}>{t.licensePlate} ({t.capacity}T)</option>
-                        ))}
-                    </select>
-                </div>
-                <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Route</label>
-                    <select value={form.routeId} onChange={e => setForm({ ...form, routeId: e.target.value })} required className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
-                        <option value="">Select Route...</option>
-                        {routes.map(r => (
-                            <option key={r.id} value={r.id}>{r.name} ({r.distance}km)</option>
-                        ))}
-                    </select>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                    <div><label className="block text-sm font-medium text-slate-700 mb-1">Start Date</label><input type="date" value={form.startDate} onChange={e => setForm({ ...form, startDate: e.target.value })} required className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20" /></div>
-                    <div><label className="block text-sm font-medium text-slate-700 mb-1">Reward</label><input type="number" min="0" step="1000" value={form.reward} onChange={e => setForm({ ...form, reward: e.target.value })} required className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20" /></div>
-                </div>
-                <div className="flex gap-3 pt-2"><button type="button" onClick={() => setShowModal(false)} className="flex-1 py-2.5 border border-slate-200 text-sm font-medium text-slate-700 rounded-lg hover:bg-slate-50">Cancel</button><button type="submit" disabled={saving} className="flex-1 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">{saving ? 'Saving...' : editingItem ? 'Update' : 'Create'}</button></div>
-            </form></div></div>)}
-
-            {/* End Schedule Modal */}
-            {showEndModal && (<div className="fixed inset-0 z-50 flex items-center justify-center"><div className="absolute inset-0 bg-black/30" onClick={() => setShowEndModal(false)} /><div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6"><div className="flex items-center justify-between mb-5"><h2 className="text-lg font-semibold text-slate-900">End Schedule</h2><button onClick={() => setShowEndModal(false)} className="text-slate-400 hover:text-slate-600"><X className="w-5 h-5" /></button></div><form onSubmit={handleEndSchedule} className="space-y-4">
-                <div><label className="block text-sm font-medium text-slate-700 mb-1">Documentary Proof (URL/Note)</label><textarea value={endForm.documentaryProof || ''} onChange={e => setEndForm({ ...endForm, documentaryProof: e.target.value })} rows={3} placeholder="Link to images or notes..." className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20" /></div>
-                <div className="flex gap-3 pt-2"><button type="button" onClick={() => setShowEndModal(false)} className="flex-1 py-2.5 border border-slate-200 text-sm font-medium text-slate-700 rounded-lg hover:bg-slate-50">Cancel</button><button type="submit" className="flex-1 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">Confirm End</button></div>
-            </form></div></div>)}
-
-            {deleteConfirmId && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center">
-                    <div className="absolute inset-0 bg-black/30" onClick={() => setDeleteConfirmId(null)} />
-                    <div className="relative bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 p-6 text-center">
-                        <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Trash2 className="w-6 h-6 text-red-600" />
+            {/* Glassmorphic Add/Edit Modal */}
+            {showModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-slate-900/40 dark:bg-slate-900/60 backdrop-blur-sm transition-opacity opacity-100" onClick={() => setShowModal(false)} />
+                    <div className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg mx-auto overflow-hidden transform transition-all scale-100 translate-y-0 opacity-100 border border-slate-200 dark:border-slate-800">
+                        {/* Modal Header */}
+                        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+                            <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                                {editingItem ? 'Edit Schedule Strategy' : 'Create New Schedule'}
+                            </h2>
+                            <button
+                                onClick={() => setShowModal(false)}
+                                className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
                         </div>
-                        <h3 className="text-lg font-semibold text-slate-900 mb-2">Delete Schedule</h3>
-                        <p className="text-sm text-slate-500 mb-6">Are you sure you want to delete this schedule? This action cannot be undone.</p>
-                        <div className="flex justify-end gap-3">
-                            <button onClick={() => setDeleteConfirmId(null)} className="flex-1 px-4 py-2 border border-slate-200 text-sm font-medium text-slate-700 rounded-lg hover:bg-slate-50">Cancel</button>
-                            <button onClick={confirmDelete} className="flex-1 px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700">Delete</button>
+
+                        {/* Modal Body */}
+                        <div className="p-6">
+                            <form onSubmit={handleSubmit} className="space-y-5">
+                                <div>
+                                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Origin Transaction <span className="text-red-500">*</span></label>
+                                    <select
+                                        value={form.transactionId}
+                                        onChange={e => setForm({ ...form, transactionId: e.target.value })}
+                                        required
+                                        className="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 dark:text-white transition-all shadow-sm"
+                                    >
+                                        <option value="">Select an Approved Transaction...</option>
+                                        {transactions
+                                            .filter(t => {
+                                                const isApproved = t.approveStatus === 'APPROVED';
+                                                const isCurrentEditing = t.transactionId === Number(form.transactionId);
+                                                const isUsed = usedTransactionIds.includes(t.transactionId);
+                                                return isApproved && (!isUsed || isCurrentEditing);
+                                            })
+                                            .map(t => (
+                                                <option key={t.transactionId} value={t.transactionId}>#{t.transactionId} - {t.transactionType} ({t.location})</option>
+                                            ))}
+                                    </select>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Assign Driver <span className="text-red-500">*</span></label>
+                                        <select
+                                            value={form.driverId}
+                                            onChange={e => setForm({ ...form, driverId: e.target.value })}
+                                            required
+                                            className="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 dark:text-white transition-all shadow-sm"
+                                        >
+                                            <option value="">Select Assigned Driver...</option>
+                                            {drivers.filter(d => d.status === 'AVAILABLE' || d.id === Number(form.driverId)).map(d => (
+                                                <option key={d.id} value={d.id}>{d.fullName} • {d.phoneNumber}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Assign Truck <span className="text-red-500">*</span></label>
+                                        <select
+                                            value={form.truckId}
+                                            onChange={e => setForm({ ...form, truckId: e.target.value })}
+                                            required
+                                            className="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 dark:text-white transition-all shadow-sm"
+                                        >
+                                            <option value="">Select Assigned Truck...</option>
+                                            {trucks.filter(t => t.status === 'AVAILABLE' || t.id === Number(form.truckId)).map(t => (
+                                                <option key={t.id} value={t.id}>{t.licensePlate} • {t.capacity}T</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Planned Route <span className="text-red-500">*</span></label>
+                                    <select
+                                        value={form.routeId}
+                                        onChange={e => setForm({ ...form, routeId: e.target.value })}
+                                        required
+                                        className="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 dark:text-white transition-all shadow-sm"
+                                    >
+                                        <option value="">Designate a Route...</option>
+                                        {routes.map(r => (
+                                            <option key={r.id} value={r.id}>{r.name} • {r.distance}km</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="grid grid-cols-2 gap-5">
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Start Date <span className="text-red-500">*</span></label>
+                                        <input
+                                            type="date"
+                                            value={form.startDate}
+                                            onChange={e => setForm({ ...form, startDate: e.target.value })}
+                                            required
+                                            className="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 dark:text-white transition-all shadow-sm"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Expected Reward (₫) <span className="text-red-500">*</span></label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            step="1000"
+                                            value={form.reward}
+                                            onChange={e => setForm({ ...form, reward: e.target.value })}
+                                            required
+                                            placeholder="e.g. 500,000"
+                                            className="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 dark:text-white transition-all shadow-sm"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Modal Footer */}
+                                <div className="flex gap-3 pt-6 mt-2 border-t border-slate-100 dark:border-slate-800">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowModal(false)}
+                                        className="flex-1 py-3 px-4 border border-slate-300 dark:border-slate-600 text-sm font-bold text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transform active:scale-95 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={saving}
+                                        className="flex-1 py-3 px-4 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed transform active:scale-95 transition-all flex items-center justify-center shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
+                                    >
+                                        {saving ? (
+                                            <span className="flex items-center gap-2">
+                                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                                Saving...
+                                            </span>
+                                        ) : editingItem ? 'Save Changes' : 'Initialize Schedule'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* End Schedule Completion Modal */}
+            {showEndModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-slate-900/40 dark:bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowEndModal(false)} />
+                    <div className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-md mx-auto border border-slate-200 dark:border-slate-800">
+                        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 dark:border-slate-800">
+                            <h2 className="text-xl font-bold text-slate-900 dark:text-white">Conclude Schedule</h2>
+                            <button onClick={() => setShowEndModal(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><X className="w-5 h-5" /></button>
+                        </div>
+                        <form onSubmit={handleEndSchedule} className="p-6 space-y-5">
+                            <div>
+                                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Finalization Proof (URL/Notes)</label>
+                                <textarea
+                                    value={endForm.documentaryProof || ''}
+                                    onChange={e => setEndForm({ ...endForm, documentaryProof: e.target.value })}
+                                    rows={4}
+                                    placeholder="Provide links to delivery receipts, images, or closing notes..."
+                                    className="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 dark:text-white transition-all shadow-sm"
+                                />
+                            </div>
+                            <div className="flex gap-3 pt-2">
+                                <button type="button" onClick={() => setShowEndModal(false)} className="flex-1 py-3 px-4 border border-slate-300 dark:border-slate-600 text-sm font-bold text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transform active:scale-95 transition-all">Cancel</button>
+                                <button type="submit" className="flex-1 py-3 px-4 bg-emerald-600 text-white text-sm font-bold rounded-xl hover:bg-emerald-700 transform active:scale-95 transition-all shadow-md">Confirm Completion</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Destructive Delete Confirmation Modal */}
+            {deleteConfirmId && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setDeleteConfirmId(null)} />
+                    <div className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-sm mx-auto p-6 text-center transform transition-all border border-slate-200 dark:border-slate-800">
+                        <div className="w-16 h-16 bg-red-100 dark:bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-5">
+                            <Trash2 className="w-8 h-8 text-red-600 dark:text-red-400" />
+                        </div>
+                        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Terminate Schedule?</h3>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 mb-8 px-2">
+                            You are about to permanently delete this schedule. This action cannot be reversed. Are you absolutely sure?
+                        </p>
+                        <div className="flex gap-3">
+                            <button onClick={() => setDeleteConfirmId(null)} className="flex-1 px-4 py-3 border border-slate-300 dark:border-slate-600 text-sm font-bold text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transform active:scale-95 transition-all">Keep It</button>
+                            <button onClick={confirmDelete} className="flex-1 px-4 py-3 bg-red-600 text-white text-sm font-bold rounded-xl hover:bg-red-700 transform active:scale-95 transition-all shadow-md">Yes, Delete</button>
                         </div>
                     </div>
                 </div>
