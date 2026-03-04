@@ -5,7 +5,7 @@ const axiosInstance = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 120000,
+  timeout: 300000,
 });
 
 // ─── Request Interceptor: Attach JWT Bearer token ───

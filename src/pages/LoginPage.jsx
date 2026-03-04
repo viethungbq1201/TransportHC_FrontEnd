@@ -132,7 +132,27 @@ const LoginPage = () => {
                                 </span>
                             ) : 'Sign In'}
                         </button>
+
+
                     </form>
+
+                    {/* Demo Account & Server Notice */}
+                    <div className="mt-8 space-y-4">
+
+                        {/* Admin Account Info */}
+                        <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl text-sm text-blue-900">
+                            <p className="font-semibold mb-2">🔑 Admin Demo Account</p>
+                            <p><span className="font-medium">Username:</span> admin</p>
+                            <p><span className="font-medium">Password:</span> admin1201</p>
+                        </div>
+
+                        {/* Server Notice */}
+                        <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800">
+                            ⚠️ If login takes too long or fails, please try again after a few seconds.
+                            The system is deployed using a free hosting service, so the server may sleep when inactive.
+                        </div>
+
+                    </div>
 
                 </div>
             </div>
