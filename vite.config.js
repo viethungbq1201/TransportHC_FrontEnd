@@ -17,7 +17,7 @@ export default defineConfig({
     // This avoids CORS issues during development
     proxy: {
       '/transport': {
-        target: 'http://localhost:8080',
+        target: 'https://transporthc-backend.onrender.com',
         changeOrigin: true,
         secure: false,
       },
