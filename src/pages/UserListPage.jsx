@@ -235,76 +235,78 @@ const UserListPage = () => {
                         <p className="text-sm">No users found</p>
                     </div>
                 ) : (
-                    <table className="w-full">
-                        <thead className="bg-slate-50">
-                            <tr className="border-b border-slate-200">
-                                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">#</th>
-                                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">User Info</th>
-                                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Contact</th>
-                                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Role</th>
-                                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
-                                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {filtered.map((user, index) => (
-                                <tr key={user.id} className="hover:bg-slate-50/50 transition-colors">
-                                    <td className="px-5 py-4 text-sm text-slate-500">{index + 1}</td>
-                                    <td className="px-5 py-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-9 h-9 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center text-sm font-bold shadow-sm">
-                                                {(user.fullName || user.username || 'U').charAt(0).toUpperCase()}
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-medium text-slate-900">{user.fullName || user.username}</p>
-                                                <p className="text-xs text-slate-500">@{user.username}</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-5 py-4">
-                                        <div className="flex flex-col">
-                                            <span className="text-sm text-slate-600">{user.address || '-'}</span>
-                                            <span className="text-xs text-slate-400">{user.phoneNumber || '-'}</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-5 py-4">
-                                        <span className={`inline-flex px-2.5 py-1 text-xs font-medium rounded-full border ${roleBadge(getPrimaryRole(user.roles))}`}>
-                                            {RoleCodeLabels[getPrimaryRole(user.roles)] || getPrimaryRole(user.roles)}
-                                        </span>
-                                    </td>
-                                    {/* Status cell with inline dropdown */}
-                                    <td className="px-5 py-4">
-                                        <button
-                                            ref={el => { statusBtnRef.current[user.id] = el; }}
-                                            onClick={(e) => {
-                                                if (!can('UPDATE_STATUS_USER')) return;
-                                                if (statusDropdownId === user.id) {
-                                                    setStatusDropdownId(null);
-                                                } else {
-                                                    const rect = e.currentTarget.getBoundingClientRect();
-                                                    setDropdownPos({ top: rect.bottom + 4, left: rect.left });
-                                                    setStatusDropdownId(user.id);
-                                                }
-                                            }}
-                                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${can('UPDATE_STATUS_USER') ? 'cursor-pointer hover:shadow-sm transition-shadow' : 'cursor-default'} ${statusBadge(user.status)}`}
-                                            disabled={!can('UPDATE_STATUS_USER')}
-                                        >
-                                            <div className={`w-1.5 h-1.5 rounded-full ${statusDot(user.status)}`} />
-                                            {UserStatusLabels[user.status] || user.status || 'Unknown'}
-                                            {can('UPDATE_STATUS_USER') && <ChevronDown className="w-3 h-3 ml-0.5 opacity-60" />}
-                                        </button>
-                                    </td>
-                                    <td className="px-5 py-4">
-                                        <div className="flex items-center gap-1.5">
-                                            <ActionButton onClick={() => setDetailUser(user)} icon={Eye} title="View" color="slate" />
-                                            {can('UPDATE_USER') && <ActionButton onClick={() => openEdit(user)} icon={Pencil} title="Edit" color="blue" />}
-                                            {can('DELETE_USER') && <ActionButton onClick={() => setDeleteConfirm(user)} icon={Trash2} title="Delete" color="red" />}
-                                        </div>
-                                    </td>
+                    <div className="overflow-x-auto w-full">
+                        <table className="w-full whitespace-nowrap">
+                            <thead className="bg-slate-50">
+                                <tr className="border-b border-slate-200">
+                                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">#</th>
+                                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">User Info</th>
+                                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Contact</th>
+                                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Role</th>
+                                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+                                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                                {filtered.map((user, index) => (
+                                    <tr key={user.id} className="hover:bg-slate-50/50 transition-colors">
+                                        <td className="px-5 py-4 text-sm text-slate-500">{index + 1}</td>
+                                        <td className="px-5 py-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-9 h-9 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center text-sm font-bold shadow-sm">
+                                                    {(user.fullName || user.username || 'U').charAt(0).toUpperCase()}
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-medium text-slate-900">{user.fullName || user.username}</p>
+                                                    <p className="text-xs text-slate-500">@{user.username}</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-5 py-4">
+                                            <div className="flex flex-col">
+                                                <span className="text-sm text-slate-600">{user.address || '-'}</span>
+                                                <span className="text-xs text-slate-400">{user.phoneNumber || '-'}</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-5 py-4">
+                                            <span className={`inline-flex px-2.5 py-1 text-xs font-medium rounded-full border ${roleBadge(getPrimaryRole(user.roles))}`}>
+                                                {RoleCodeLabels[getPrimaryRole(user.roles)] || getPrimaryRole(user.roles)}
+                                            </span>
+                                        </td>
+                                        {/* Status cell with inline dropdown */}
+                                        <td className="px-5 py-4">
+                                            <button
+                                                ref={el => { statusBtnRef.current[user.id] = el; }}
+                                                onClick={(e) => {
+                                                    if (!can('UPDATE_STATUS_USER')) return;
+                                                    if (statusDropdownId === user.id) {
+                                                        setStatusDropdownId(null);
+                                                    } else {
+                                                        const rect = e.currentTarget.getBoundingClientRect();
+                                                        setDropdownPos({ top: rect.bottom + 4, left: rect.left });
+                                                        setStatusDropdownId(user.id);
+                                                    }
+                                                }}
+                                                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${can('UPDATE_STATUS_USER') ? 'cursor-pointer hover:shadow-sm transition-shadow' : 'cursor-default'} ${statusBadge(user.status)}`}
+                                                disabled={!can('UPDATE_STATUS_USER')}
+                                            >
+                                                <div className={`w-1.5 h-1.5 rounded-full ${statusDot(user.status)}`} />
+                                                {UserStatusLabels[user.status] || user.status || 'Unknown'}
+                                                {can('UPDATE_STATUS_USER') && <ChevronDown className="w-3 h-3 ml-0.5 opacity-60" />}
+                                            </button>
+                                        </td>
+                                        <td className="px-5 py-4">
+                                            <div className="flex items-center gap-1.5">
+                                                <ActionButton onClick={() => setDetailUser(user)} icon={Eye} title="View" color="slate" />
+                                                {can('UPDATE_USER') && <ActionButton onClick={() => openEdit(user)} icon={Pencil} title="Edit" color="blue" />}
+                                                {can('DELETE_USER') && <ActionButton onClick={() => setDeleteConfirm(user)} icon={Trash2} title="Delete" color="red" />}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 )}
             </div>
 

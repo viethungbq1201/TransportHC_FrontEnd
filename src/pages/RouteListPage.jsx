@@ -111,41 +111,43 @@ const RouteListPage = () => {
                         <p className="text-sm">No routes found</p>
                     </div>
                 ) : (
-                    <table className="w-full">
-                        <thead className="bg-slate-50">
-                            <tr className="border-b border-slate-200">
-                                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">#</th>
-                                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Route Name</th>
-                                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Start Point</th>
-                                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">End Point</th>
-                                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Distance</th>
-                                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {filtered.map((route, index) => (
-                                <tr key={route.id} className="hover:bg-slate-50/50 transition-colors">
-                                    <td className="px-5 py-4 text-sm text-slate-500">{index + 1}</td>
-                                    <td className="px-5 py-4">
-                                        <div className="flex items-center gap-2">
-                                            <MapPin className="w-4 h-4 text-indigo-400" />
-                                            <span className="text-sm font-medium text-slate-900">{route.name}</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-5 py-4 text-sm text-slate-600">{route.start_point}</td>
-                                    <td className="px-5 py-4 text-sm text-slate-600">{route.end_point}</td>
-                                    <td className="px-5 py-4 text-sm text-slate-600">{route.distance ? `${route.distance} km` : '-'}</td>
-                                    <td className="px-5 py-4">
-                                        <div className="flex items-center gap-1.5">
-                                            <ActionButton onClick={() => setDetailRoute(route)} icon={Eye} title="View" color="slate" />
-                                            {can('UPDATE_ROUTE') && <ActionButton onClick={() => openEdit(route)} icon={Pencil} title="Edit" color="blue" />}
-                                            {can('DELETE_ROUTE') && <ActionButton onClick={() => setDeleteConfirm(route)} icon={Trash2} title="Delete" color="red" />}
-                                        </div>
-                                    </td>
+                    <div className="overflow-x-auto w-full">
+                        <table className="w-full whitespace-nowrap">
+                            <thead className="bg-slate-50">
+                                <tr className="border-b border-slate-200">
+                                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">#</th>
+                                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Route Name</th>
+                                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Start Point</th>
+                                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">End Point</th>
+                                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Distance</th>
+                                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                                {filtered.map((route, index) => (
+                                    <tr key={route.id} className="hover:bg-slate-50/50 transition-colors">
+                                        <td className="px-5 py-4 text-sm text-slate-500">{index + 1}</td>
+                                        <td className="px-5 py-4">
+                                            <div className="flex items-center gap-2">
+                                                <MapPin className="w-4 h-4 text-indigo-400" />
+                                                <span className="text-sm font-medium text-slate-900">{route.name}</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-5 py-4 text-sm text-slate-600">{route.start_point}</td>
+                                        <td className="px-5 py-4 text-sm text-slate-600">{route.end_point}</td>
+                                        <td className="px-5 py-4 text-sm text-slate-600">{route.distance ? `${route.distance} km` : '-'}</td>
+                                        <td className="px-5 py-4">
+                                            <div className="flex items-center gap-1.5">
+                                                <ActionButton onClick={() => setDetailRoute(route)} icon={Eye} title="View" color="slate" />
+                                                {can('UPDATE_ROUTE') && <ActionButton onClick={() => openEdit(route)} icon={Pencil} title="Edit" color="blue" />}
+                                                {can('DELETE_ROUTE') && <ActionButton onClick={() => setDeleteConfirm(route)} icon={Trash2} title="Delete" color="red" />}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 )}
             </div>
 

@@ -193,35 +193,37 @@ const SalaryReportPage = () => {
                 {loading ? (<div className="flex items-center justify-center h-48"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" /></div>
                 ) : filtered.length === 0 ? (<div className="flex flex-col items-center justify-center py-16 text-slate-400"><FileText className="w-12 h-12 mb-3 opacity-30" /><p className="text-sm">No salary reports found</p></div>
                 ) : (
-                    <table className="w-full"><thead><tr className="border-b border-slate-200">
-                        <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider w-16">#</th>
-                        <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Driver</th>
-                        <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Base Salary</th>
-                        <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Salary</th>
-                        <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
-                        <th className="text-right px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider w-48">Actions</th>
-                    </tr></thead>
-                        <tbody>{filtered.map((item, index) => (
-                            <tr key={item.reportId || item.salaryReportId} className="border-b border-slate-100 hover:bg-slate-50/50">
-                                <td className="px-5 py-3.5 text-sm text-slate-500">{index + 1}</td>
-                                <td className="px-5 py-3.5 text-sm font-medium text-slate-900">{item.user?.fullName || '-'}</td>
-                                <td className="px-5 py-3.5 text-sm text-slate-600">{formatCurrency(item.baseSalary)}</td>
-                                <td className="px-5 py-3.5 text-sm font-medium text-slate-900">{formatCurrency(item.total)}</td>
-                                <td className="px-5 py-3.5"><span className={`inline-flex px-2.5 py-0.5 text-xs font-medium rounded-full border ${statusBadge(item.status)}`}>{SalaryReportStatusLabels[item.status] || item.status || '-'}</span></td>
-                                <td className="px-5 py-3.5">
-                                    <div className="flex items-center justify-end gap-1.5 whitespace-nowrap">
-                                        <ActionButton onClick={() => { setSelectedReport(item); setShowDetailsModal(true); }} icon={Eye} title="View Details" color="indigo" />
-                                        {item.status === SalaryReportStatus.PENDING && (
-                                            <>
-                                                {can('UPDATE_SALARY_REPORT') && <ActionButton onClick={() => openEdit(item)} icon={Pencil} title="Edit" color="blue" />}
-                                                {can('APPROVE_SALARY_REPORT') && <ActionButton onClick={() => handleMarkDone(item.reportId || item.salaryReportId)} icon={CheckCircle} title="Mark Done" color="green" />}
-                                            </>
-                                        )}
-                                        {can('DELETE_SALARY_REPORT') && <ActionButton onClick={() => handleDelete(item.reportId || item.salaryReportId)} icon={Trash2} title="Delete" color="red" />}
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}</tbody></table>
+                    <div className="overflow-x-auto w-full">
+                        <table className="w-full whitespace-nowrap"><thead><tr className="border-b border-slate-200">
+                            <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider w-16">#</th>
+                            <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Driver</th>
+                            <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Base Salary</th>
+                            <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Salary</th>
+                            <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+                            <th className="text-right px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider w-48">Actions</th>
+                        </tr></thead>
+                            <tbody>{filtered.map((item, index) => (
+                                <tr key={item.reportId || item.salaryReportId} className="border-b border-slate-100 hover:bg-slate-50/50">
+                                    <td className="px-5 py-3.5 text-sm text-slate-500">{index + 1}</td>
+                                    <td className="px-5 py-3.5 text-sm font-medium text-slate-900">{item.user?.fullName || '-'}</td>
+                                    <td className="px-5 py-3.5 text-sm text-slate-600">{formatCurrency(item.baseSalary)}</td>
+                                    <td className="px-5 py-3.5 text-sm font-medium text-slate-900">{formatCurrency(item.total)}</td>
+                                    <td className="px-5 py-3.5"><span className={`inline-flex px-2.5 py-0.5 text-xs font-medium rounded-full border ${statusBadge(item.status)}`}>{SalaryReportStatusLabels[item.status] || item.status || '-'}</span></td>
+                                    <td className="px-5 py-3.5">
+                                        <div className="flex items-center justify-end gap-1.5 whitespace-nowrap">
+                                            <ActionButton onClick={() => { setSelectedReport(item); setShowDetailsModal(true); }} icon={Eye} title="View Details" color="indigo" />
+                                            {item.status === SalaryReportStatus.PENDING && (
+                                                <>
+                                                    {can('UPDATE_SALARY_REPORT') && <ActionButton onClick={() => openEdit(item)} icon={Pencil} title="Edit" color="blue" />}
+                                                    {can('APPROVE_SALARY_REPORT') && <ActionButton onClick={() => handleMarkDone(item.reportId || item.salaryReportId)} icon={CheckCircle} title="Mark Done" color="green" />}
+                                                </>
+                                            )}
+                                            {can('DELETE_SALARY_REPORT') && <ActionButton onClick={() => handleDelete(item.reportId || item.salaryReportId)} icon={Trash2} title="Delete" color="red" />}
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}</tbody></table>
+                    </div>
                 )}
             </div>
 

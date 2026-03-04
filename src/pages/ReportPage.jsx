@@ -161,20 +161,22 @@ const ReportPage = () => {
                         <span className="text-sm font-bold text-indigo-700">Total Extra Trips: {data.totalExtraTripCount}</span>
                     </div>
                 )}
-                <table className="w-full">
-                    <thead>
-                        <tr className="border-b border-slate-200">
-                            {headers.map((h, i) => <th key={i} className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">{h}</th>)}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {items.map((item, idx) => (
-                            <tr key={idx} className="border-b border-slate-100 hover:bg-slate-50/50">
-                                {renderRow(item, idx)}
+                <div className="overflow-x-auto w-full">
+                    <table className="w-full whitespace-nowrap">
+                        <thead>
+                            <tr className="border-b border-slate-200">
+                                {headers.map((h, i) => <th key={i} className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">{h}</th>)}
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {items.map((item, idx) => (
+                                <tr key={idx} className="border-b border-slate-100 hover:bg-slate-50/50">
+                                    {renderRow(item, idx)}
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         );
     };

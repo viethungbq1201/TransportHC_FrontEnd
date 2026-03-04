@@ -97,35 +97,37 @@ const CategoryListPage = () => {
                         <p className="text-sm">No categories found</p>
                     </div>
                 ) : (
-                    <table className="w-full">
-                        <thead className="bg-slate-50">
-                            <tr className="border-b border-slate-200">
-                                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">#</th>
-                                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Category Name</th>
-                                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {filtered.map((item, index) => (
-                                <tr key={item.categoryId} className="hover:bg-slate-50/50 transition-colors">
-                                    <td className="px-5 py-4 text-sm text-slate-500">{index + 1}</td>
-                                    <td className="px-5 py-4">
-                                        <div className="flex items-center gap-2">
-                                            <FolderTree className="w-4 h-4 text-indigo-400" />
-                                            <span className="text-sm font-medium text-slate-900">{item.name}</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-5 py-4">
-                                        <div className="flex items-center gap-1.5">
-                                            <ActionButton onClick={() => setDetailItem(item)} icon={Eye} title="View" color="slate" />
-                                            {can('UPDATE_CATEGORY') && <ActionButton onClick={() => openEdit(item)} icon={Pencil} title="Edit" color="blue" />}
-                                            {can('DELETE_CATEGORY') && <ActionButton onClick={() => setDeleteConfirm(item)} icon={Trash2} title="Delete" color="red" />}
-                                        </div>
-                                    </td>
+                    <div className="overflow-x-auto w-full">
+                        <table className="w-full whitespace-nowrap">
+                            <thead className="bg-slate-50">
+                                <tr className="border-b border-slate-200">
+                                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">#</th>
+                                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Category Name</th>
+                                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                                {filtered.map((item, index) => (
+                                    <tr key={item.categoryId} className="hover:bg-slate-50/50 transition-colors">
+                                        <td className="px-5 py-4 text-sm text-slate-500">{index + 1}</td>
+                                        <td className="px-5 py-4">
+                                            <div className="flex items-center gap-2">
+                                                <FolderTree className="w-4 h-4 text-indigo-400" />
+                                                <span className="text-sm font-medium text-slate-900">{item.name}</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-5 py-4">
+                                            <div className="flex items-center gap-1.5">
+                                                <ActionButton onClick={() => setDetailItem(item)} icon={Eye} title="View" color="slate" />
+                                                {can('UPDATE_CATEGORY') && <ActionButton onClick={() => openEdit(item)} icon={Pencil} title="Edit" color="blue" />}
+                                                {can('DELETE_CATEGORY') && <ActionButton onClick={() => setDeleteConfirm(item)} icon={Trash2} title="Delete" color="red" />}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 )}
             </div>
 

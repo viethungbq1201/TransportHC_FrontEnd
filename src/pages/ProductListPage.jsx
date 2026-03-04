@@ -157,43 +157,45 @@ const ProductListPage = () => {
                         <p className="text-sm">No products found</p>
                     </div>
                 ) : (
-                    <table className="w-full">
-                        <thead className="bg-slate-50">
-                            <tr className="border-b border-slate-200">
-                                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">#</th>
-                                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Product Name</th>
-                                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Category</th>
-                                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Price</th>
-                                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {filtered.map((item, index) => (
-                                <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                                    <td className="px-5 py-4 text-sm text-slate-500">{hasLocalFilter ? index + 1 : currentPage * PAGE_SIZE + index + 1}</td>
-                                    <td className="px-5 py-4">
-                                        <div className="flex items-center gap-2">
-                                            <Package className="w-4 h-4 text-indigo-400" />
-                                            <span className="text-sm font-medium text-slate-900">{item.name}</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-5 py-4">
-                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-200">
-                                            {item.category?.name || '-'}
-                                        </span>
-                                    </td>
-                                    <td className="px-5 py-4 text-sm font-medium text-slate-900">{formatPrice(item.price)}</td>
-                                    <td className="px-5 py-4">
-                                        <div className="flex items-center gap-1.5">
-                                            <ActionButton onClick={() => setDetailItem(item)} icon={Eye} title="View" color="slate" />
-                                            {can('UPDATE_PRODUCT') && <ActionButton onClick={() => openEdit(item)} icon={Pencil} title="Edit" color="blue" />}
-                                            {can('DELETE_PRODUCT') && <ActionButton onClick={() => setDeleteConfirm(item)} icon={Trash2} title="Delete" color="red" />}
-                                        </div>
-                                    </td>
+                    <div className="overflow-x-auto w-full">
+                        <table className="w-full whitespace-nowrap">
+                            <thead className="bg-slate-50">
+                                <tr className="border-b border-slate-200">
+                                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">#</th>
+                                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Product Name</th>
+                                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Category</th>
+                                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Price</th>
+                                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                                {filtered.map((item, index) => (
+                                    <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
+                                        <td className="px-5 py-4 text-sm text-slate-500">{hasLocalFilter ? index + 1 : currentPage * PAGE_SIZE + index + 1}</td>
+                                        <td className="px-5 py-4">
+                                            <div className="flex items-center gap-2">
+                                                <Package className="w-4 h-4 text-indigo-400" />
+                                                <span className="text-sm font-medium text-slate-900">{item.name}</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-5 py-4">
+                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                                {item.category?.name || '-'}
+                                            </span>
+                                        </td>
+                                        <td className="px-5 py-4 text-sm font-medium text-slate-900">{formatPrice(item.price)}</td>
+                                        <td className="px-5 py-4">
+                                            <div className="flex items-center gap-1.5">
+                                                <ActionButton onClick={() => setDetailItem(item)} icon={Eye} title="View" color="slate" />
+                                                {can('UPDATE_PRODUCT') && <ActionButton onClick={() => openEdit(item)} icon={Pencil} title="Edit" color="blue" />}
+                                                {can('DELETE_PRODUCT') && <ActionButton onClick={() => setDeleteConfirm(item)} icon={Trash2} title="Delete" color="red" />}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 )}
 
                 {/* Pagination Controls */}
@@ -246,151 +248,157 @@ const ProductListPage = () => {
             </div>
 
             {/* ─── Product Detail Modal ─── */}
-            {detailItem && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setDetailItem(null)} />
-                    <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-sm mx-auto">
-                        <div className="flex items-center justify-between p-6 border-b border-slate-100">
-                            <h2 className="text-xl font-bold text-slate-900">Product Details</h2>
-                            <button onClick={() => setDetailItem(null)} className="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-100 transition-colors">
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-                        <div className="p-6 space-y-4">
-                            <div className="flex items-center gap-4 pb-4 border-b border-slate-100">
-                                <div className="w-14 h-14 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center shadow-sm">
-                                    <Package className="w-7 h-7" />
+            {
+                detailItem && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setDetailItem(null)} />
+                        <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-sm mx-auto">
+                            <div className="flex items-center justify-between p-6 border-b border-slate-100">
+                                <h2 className="text-xl font-bold text-slate-900">Product Details</h2>
+                                <button onClick={() => setDetailItem(null)} className="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-100 transition-colors">
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+                            <div className="p-6 space-y-4">
+                                <div className="flex items-center gap-4 pb-4 border-b border-slate-100">
+                                    <div className="w-14 h-14 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center shadow-sm">
+                                        <Package className="w-7 h-7" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-semibold text-slate-900">{detailItem.name}</h3>
+                                        <p className="text-sm text-slate-500">Product ID: #{detailItem.id}</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h3 className="text-lg font-semibold text-slate-900">{detailItem.name}</h3>
-                                    <p className="text-sm text-slate-500">Product ID: #{detailItem.id}</p>
+                                <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
+                                    <div>
+                                        <span className="text-slate-400 text-xs uppercase tracking-wider">ID</span>
+                                        <p className="text-slate-900 font-medium mt-0.5">#{detailItem.id}</p>
+                                    </div>
+                                    <div>
+                                        <span className="text-slate-400 text-xs uppercase tracking-wider">Name</span>
+                                        <p className="text-slate-900 font-medium mt-0.5">{detailItem.name}</p>
+                                    </div>
+                                    <div>
+                                        <span className="text-slate-400 text-xs uppercase tracking-wider">Category</span>
+                                        <p className="text-slate-900 font-medium mt-0.5">{detailItem.category?.name || '-'}</p>
+                                    </div>
+                                    <div>
+                                        <span className="text-slate-400 text-xs uppercase tracking-wider">Price</span>
+                                        <p className="text-slate-900 font-medium mt-0.5">{formatPrice(detailItem.price)}</p>
+                                    </div>
                                 </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
-                                <div>
-                                    <span className="text-slate-400 text-xs uppercase tracking-wider">ID</span>
-                                    <p className="text-slate-900 font-medium mt-0.5">#{detailItem.id}</p>
-                                </div>
-                                <div>
-                                    <span className="text-slate-400 text-xs uppercase tracking-wider">Name</span>
-                                    <p className="text-slate-900 font-medium mt-0.5">{detailItem.name}</p>
-                                </div>
-                                <div>
-                                    <span className="text-slate-400 text-xs uppercase tracking-wider">Category</span>
-                                    <p className="text-slate-900 font-medium mt-0.5">{detailItem.category?.name || '-'}</p>
-                                </div>
-                                <div>
-                                    <span className="text-slate-400 text-xs uppercase tracking-wider">Price</span>
-                                    <p className="text-slate-900 font-medium mt-0.5">{formatPrice(detailItem.price)}</p>
-                                </div>
+                            <div className="p-6 pt-0">
+                                <button onClick={() => setDetailItem(null)} className="w-full py-2.5 border border-slate-200 text-sm font-semibold text-slate-700 rounded-xl hover:bg-slate-50 transition-colors">
+                                    Close
+                                </button>
                             </div>
-                        </div>
-                        <div className="p-6 pt-0">
-                            <button onClick={() => setDetailItem(null)} className="w-full py-2.5 border border-slate-200 text-sm font-semibold text-slate-700 rounded-xl hover:bg-slate-50 transition-colors">
-                                Close
-                            </button>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* ─── Delete Confirmation Modal ─── */}
-            {deleteConfirm && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setDeleteConfirm(null)} />
-                    <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-sm mx-auto p-6">
-                        <div className="flex flex-col items-center text-center mb-6">
-                            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-3">
-                                <Trash2 className="w-6 h-6 text-red-600" />
+            {
+                deleteConfirm && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setDeleteConfirm(null)} />
+                        <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-sm mx-auto p-6">
+                            <div className="flex flex-col items-center text-center mb-6">
+                                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-3">
+                                    <Trash2 className="w-6 h-6 text-red-600" />
+                                </div>
+                                <h3 className="text-lg font-bold text-slate-900">Delete Product</h3>
+                                <p className="text-sm text-slate-500 mt-2">
+                                    Are you sure you want to delete product <span className="font-semibold text-slate-700">{deleteConfirm.name}</span>? This action cannot be undone.
+                                </p>
                             </div>
-                            <h3 className="text-lg font-bold text-slate-900">Delete Product</h3>
-                            <p className="text-sm text-slate-500 mt-2">
-                                Are you sure you want to delete product <span className="font-semibold text-slate-700">{deleteConfirm.name}</span>? This action cannot be undone.
-                            </p>
-                        </div>
-                        <div className="flex gap-3">
-                            <button onClick={() => setDeleteConfirm(null)} className="flex-1 py-2.5 border border-slate-200 text-sm font-semibold text-slate-700 rounded-xl hover:bg-slate-50 transition-colors">
-                                Cancel
-                            </button>
-                            <button onClick={handleDelete} className="flex-1 py-2.5 bg-red-600 text-white text-sm font-semibold rounded-xl hover:bg-red-700 transition-colors">
-                                Delete
-                            </button>
+                            <div className="flex gap-3">
+                                <button onClick={() => setDeleteConfirm(null)} className="flex-1 py-2.5 border border-slate-200 text-sm font-semibold text-slate-700 rounded-xl hover:bg-slate-50 transition-colors">
+                                    Cancel
+                                </button>
+                                <button onClick={handleDelete} className="flex-1 py-2.5 bg-red-600 text-white text-sm font-semibold rounded-xl hover:bg-red-700 transition-colors">
+                                    Delete
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* ─── Create/Edit Modal ─── */}
-            {showModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowModal(false)} />
-                    <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md mx-auto">
-                        <div className="flex items-center justify-between p-6 border-b border-slate-100">
-                            <h2 className="text-xl font-bold text-slate-900">{editingItem ? 'Edit Product' : 'Add New Product'}</h2>
-                            <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-100 transition-colors">
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-                        <div className="p-6">
-                            <form onSubmit={handleSubmit} className="space-y-5">
-                                <div>
-                                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">Product Name <span className="text-red-500">*</span></label>
-                                    <input
-                                        value={form.name}
-                                        onChange={e => setForm({ ...form, name: e.target.value })}
-                                        required
-                                        minLength={4}
-                                        maxLength={255}
-                                        placeholder="Min 4 characters"
-                                        className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">Category <span className="text-red-500">*</span></label>
-                                    <select
-                                        value={form.categoryId}
-                                        onChange={e => setForm({ ...form, categoryId: e.target.value })}
-                                        required
-                                        className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                                    >
-                                        <option value="">Select a category</option>
-                                        {categories.map(cat => (
-                                            <option key={cat.categoryId} value={String(cat.categoryId)}>{cat.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">Price (₫) <span className="text-red-500">*</span></label>
-                                    <input
-                                        type="number"
-                                        value={form.price}
-                                        onChange={e => setForm({ ...form, price: e.target.value })}
-                                        required
-                                        min="1"
-                                        step="1"
-                                        placeholder="Required (>0)"
-                                        className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                                    />
-                                </div>
-                                <div className="flex gap-3 pt-4 border-t border-slate-100 mt-6">
-                                    <button type="button" onClick={() => setShowModal(false)} className="flex-1 py-2.5 border border-slate-200 text-sm font-semibold text-slate-700 rounded-xl hover:bg-slate-50 transition-colors">
-                                        Cancel
-                                    </button>
-                                    <button type="submit" disabled={saving} className="flex-1 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 disabled:opacity-70 disabled:cursor-not-allowed transition-colors shadow-sm shadow-indigo-200">
-                                        {saving ? (
-                                            <span className="flex items-center justify-center gap-2">
-                                                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                                Saving...
-                                            </span>
-                                        ) : (editingItem ? 'Update Product' : 'Create Product')}
-                                    </button>
-                                </div>
-                            </form>
+            {
+                showModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowModal(false)} />
+                        <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md mx-auto">
+                            <div className="flex items-center justify-between p-6 border-b border-slate-100">
+                                <h2 className="text-xl font-bold text-slate-900">{editingItem ? 'Edit Product' : 'Add New Product'}</h2>
+                                <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-100 transition-colors">
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+                            <div className="p-6">
+                                <form onSubmit={handleSubmit} className="space-y-5">
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 mb-1.5">Product Name <span className="text-red-500">*</span></label>
+                                        <input
+                                            value={form.name}
+                                            onChange={e => setForm({ ...form, name: e.target.value })}
+                                            required
+                                            minLength={4}
+                                            maxLength={255}
+                                            placeholder="Min 4 characters"
+                                            className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 mb-1.5">Category <span className="text-red-500">*</span></label>
+                                        <select
+                                            value={form.categoryId}
+                                            onChange={e => setForm({ ...form, categoryId: e.target.value })}
+                                            required
+                                            className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                                        >
+                                            <option value="">Select a category</option>
+                                            {categories.map(cat => (
+                                                <option key={cat.categoryId} value={String(cat.categoryId)}>{cat.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 mb-1.5">Price (₫) <span className="text-red-500">*</span></label>
+                                        <input
+                                            type="number"
+                                            value={form.price}
+                                            onChange={e => setForm({ ...form, price: e.target.value })}
+                                            required
+                                            min="1"
+                                            step="1"
+                                            placeholder="Required (>0)"
+                                            className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                                        />
+                                    </div>
+                                    <div className="flex gap-3 pt-4 border-t border-slate-100 mt-6">
+                                        <button type="button" onClick={() => setShowModal(false)} className="flex-1 py-2.5 border border-slate-200 text-sm font-semibold text-slate-700 rounded-xl hover:bg-slate-50 transition-colors">
+                                            Cancel
+                                        </button>
+                                        <button type="submit" disabled={saving} className="flex-1 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 disabled:opacity-70 disabled:cursor-not-allowed transition-colors shadow-sm shadow-indigo-200">
+                                            {saving ? (
+                                                <span className="flex items-center justify-center gap-2">
+                                                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                    Saving...
+                                                </span>
+                                            ) : (editingItem ? 'Update Product' : 'Create Product')}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 };
 

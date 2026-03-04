@@ -144,46 +144,48 @@ const CostListPage = () => {
                 {loading ? (<div className="flex items-center justify-center h-48"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" /></div>
                 ) : filtered.length === 0 ? (<div className="flex flex-col items-center justify-center py-16 text-slate-400"><DollarSign className="w-12 h-12 mb-3 opacity-30" /><p className="text-sm">No costs found</p></div>
                 ) : (
-                    <table className="w-full"><thead><tr className="border-b border-slate-200">
-                        <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider w-16">#</th>
-                        <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Cost Type</th>
-                        <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Amount</th>
-                        <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Description</th>
-                        <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Cost Date</th>
-                        <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
-                        <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider w-24">Actions</th>
-                    </tr></thead>
-                        <tbody>{Object.values(groupedCosts).map(({ schedule, items }) => (
-                            <React.Fragment key={schedule?.scheduleId || 'unknown'}>
-                                <tr className="bg-slate-50 border-y border-slate-200">
-                                    <td colSpan="7" className="px-5 py-3 text-sm font-semibold text-slate-700">
-                                        {schedule ? `Schedule #${schedule.scheduleId} - Route: ${schedule.route?.name || 'Unknown'}` : 'Unassigned Schedule'}
-                                    </td>
-                                </tr>
-                                {items.map((item, index) => (
-                                    <tr key={item.costId} className="border-b border-slate-100 hover:bg-slate-50/50 bg-white">
-                                        <td className="px-5 py-3.5 text-sm text-slate-500 pl-8">{index + 1}</td>
-                                        <td className="px-5 py-3.5 text-sm font-medium text-slate-900">{item.costType?.name || '-'}</td>
-                                        <td className="px-5 py-3.5 text-sm text-slate-600">{item.price ? `$${Number(item.price).toLocaleString()}` : '$0'}</td>
-                                        <td className="px-5 py-3.5 text-sm text-slate-600">{item.description || '-'}</td>
-                                        <td className="px-5 py-3.5 text-sm text-slate-500">{formatDate(item.date)}</td>
-                                        <td className="px-5 py-3.5"><span className={`inline-flex px-2.5 py-0.5 text-xs font-medium rounded-full border ${approveBadge(item.approveStatus)}`}>{ApproveStatusLabels[item.approveStatus] || item.approveStatus || '-'}</span></td>
-                                        <td className="px-5 py-3.5">
-                                            <div className="flex items-center gap-1.5">
-                                                {item.approveStatus === ApproveStatus.PENDING ? (
-                                                    <>
-                                                        {can('APPROVE_COST') && <ActionButton onClick={() => handleApprove(item.costId)} icon={CheckCircle} title="Approve" color="green" />}
-                                                        {can('REJECT_COST') && <ActionButton onClick={() => handleReject(item.costId)} icon={XCircle} title="Reject" color="amber" />}
-                                                        {can('UPDATE_COST') && <ActionButton onClick={() => openEdit(item)} icon={Pencil} title="Edit" color="blue" />}
-                                                        {can('DELETE_COST') && <ActionButton onClick={() => handleDelete(item.costId)} icon={Trash2} title="Delete" color="red" />}
-                                                    </>
-                                                ) : <span className="text-xs text-slate-400 italic">Locked</span>}
-                                            </div>
+                    <div className="overflow-x-auto w-full">
+                        <table className="w-full whitespace-nowrap"><thead><tr className="border-b border-slate-200">
+                            <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider w-16">#</th>
+                            <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Cost Type</th>
+                            <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Amount</th>
+                            <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Description</th>
+                            <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Cost Date</th>
+                            <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+                            <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider w-24">Actions</th>
+                        </tr></thead>
+                            <tbody>{Object.values(groupedCosts).map(({ schedule, items }) => (
+                                <React.Fragment key={schedule?.scheduleId || 'unknown'}>
+                                    <tr className="bg-slate-50 border-y border-slate-200">
+                                        <td colSpan="7" className="px-5 py-3 text-sm font-semibold text-slate-700">
+                                            {schedule ? `Schedule #${schedule.scheduleId} - Route: ${schedule.route?.name || 'Unknown'}` : 'Unassigned Schedule'}
                                         </td>
                                     </tr>
-                                ))}
-                            </React.Fragment>
-                        ))}</tbody></table>
+                                    {items.map((item, index) => (
+                                        <tr key={item.costId} className="border-b border-slate-100 hover:bg-slate-50/50 bg-white">
+                                            <td className="px-5 py-3.5 text-sm text-slate-500 pl-8">{index + 1}</td>
+                                            <td className="px-5 py-3.5 text-sm font-medium text-slate-900">{item.costType?.name || '-'}</td>
+                                            <td className="px-5 py-3.5 text-sm text-slate-600">{item.price ? `$${Number(item.price).toLocaleString()}` : '$0'}</td>
+                                            <td className="px-5 py-3.5 text-sm text-slate-600">{item.description || '-'}</td>
+                                            <td className="px-5 py-3.5 text-sm text-slate-500">{formatDate(item.date)}</td>
+                                            <td className="px-5 py-3.5"><span className={`inline-flex px-2.5 py-0.5 text-xs font-medium rounded-full border ${approveBadge(item.approveStatus)}`}>{ApproveStatusLabels[item.approveStatus] || item.approveStatus || '-'}</span></td>
+                                            <td className="px-5 py-3.5">
+                                                <div className="flex items-center gap-1.5">
+                                                    {item.approveStatus === ApproveStatus.PENDING ? (
+                                                        <>
+                                                            {can('APPROVE_COST') && <ActionButton onClick={() => handleApprove(item.costId)} icon={CheckCircle} title="Approve" color="green" />}
+                                                            {can('REJECT_COST') && <ActionButton onClick={() => handleReject(item.costId)} icon={XCircle} title="Reject" color="amber" />}
+                                                            {can('UPDATE_COST') && <ActionButton onClick={() => openEdit(item)} icon={Pencil} title="Edit" color="blue" />}
+                                                            {can('DELETE_COST') && <ActionButton onClick={() => handleDelete(item.costId)} icon={Trash2} title="Delete" color="red" />}
+                                                        </>
+                                                    ) : <span className="text-xs text-slate-400 italic">Locked</span>}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </React.Fragment>
+                            ))}</tbody></table>
+                    </div>
                 )}
             </div>
 

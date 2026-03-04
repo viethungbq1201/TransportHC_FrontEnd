@@ -166,31 +166,33 @@ const TransactionDetailListPage = () => {
                                     </div>
                                     {!isPending && <span className="px-3 py-1 bg-slate-100 text-slate-600 border border-slate-200 rounded-full text-xs font-medium">Locked</span>}
                                 </div>
-                                <table className="w-full text-sm">
-                                    <thead><tr className="border-b border-slate-100 bg-white">
-                                        <th className="text-left px-5 py-3 font-medium text-slate-500 w-16">No.</th>
-                                        <th className="text-left px-5 py-3 font-medium text-slate-500">Product</th>
-                                        <th className="text-right px-5 py-3 font-medium text-slate-500 w-32">Qty Change</th>
-                                        <th className="text-right px-5 py-3 font-medium text-slate-500 w-24">Actions</th>
-                                    </tr></thead>
-                                    <tbody>{group.details.map((r, index) => (
-                                        <tr key={r.transactionDetailId} className="border-b border-slate-50 hover:bg-slate-50/50">
-                                            <td className="px-5 py-3 font-medium text-slate-900">{index + 1}</td>
-                                            <td className="px-5 py-3 text-slate-600">{r.product?.name || '-'}</td>
-                                            <td className="px-5 py-3 text-right font-medium text-slate-900">{isExport ? `+${r.quantityChange}` : `-${r.quantityChange}`}</td>
-                                            <td className="px-5 py-3 flex justify-end">
-                                                {isPending ? (
-                                                    <div className="flex items-center gap-1.5">
-                                                        {can('UPDATE_TRANSACTION_DETAIL') && <ActionButton onClick={() => openEdit(r)} icon={Pencil} title="Edit" color="blue" />}
-                                                        {can('DELETE_TRANSACTION_DETAIL') && <ActionButton onClick={() => handleDelete(r.transactionDetailId)} icon={Trash2} title="Delete" color="red" />}
-                                                    </div>
-                                                ) : (
-                                                    <span className="text-xs text-slate-400 italic">No access</span>
-                                                )}
-                                            </td>
-                                        </tr>
-                                    ))}</tbody>
-                                </table>
+                                <div className="overflow-x-auto w-full">
+                                    <table className="w-full text-sm whitespace-nowrap">
+                                        <thead><tr className="border-b border-slate-100 bg-white">
+                                            <th className="text-left px-5 py-3 font-medium text-slate-500 w-16">No.</th>
+                                            <th className="text-left px-5 py-3 font-medium text-slate-500">Product</th>
+                                            <th className="text-right px-5 py-3 font-medium text-slate-500 w-32">Qty Change</th>
+                                            <th className="text-right px-5 py-3 font-medium text-slate-500 w-24">Actions</th>
+                                        </tr></thead>
+                                        <tbody>{group.details.map((r, index) => (
+                                            <tr key={r.transactionDetailId} className="border-b border-slate-50 hover:bg-slate-50/50">
+                                                <td className="px-5 py-3 font-medium text-slate-900">{index + 1}</td>
+                                                <td className="px-5 py-3 text-slate-600">{r.product?.name || '-'}</td>
+                                                <td className="px-5 py-3 text-right font-medium text-slate-900">{isExport ? `+${r.quantityChange}` : `-${r.quantityChange}`}</td>
+                                                <td className="px-5 py-3 flex justify-end">
+                                                    {isPending ? (
+                                                        <div className="flex items-center gap-1.5">
+                                                            {can('UPDATE_TRANSACTION_DETAIL') && <ActionButton onClick={() => openEdit(r)} icon={Pencil} title="Edit" color="blue" />}
+                                                            {can('DELETE_TRANSACTION_DETAIL') && <ActionButton onClick={() => handleDelete(r.transactionDetailId)} icon={Trash2} title="Delete" color="red" />}
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-xs text-slate-400 italic">No access</span>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))}</tbody>
+                                    </table>
+                                </div>
                             </div>
                         );
                     })}

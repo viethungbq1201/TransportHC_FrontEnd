@@ -104,36 +104,38 @@ const TransactionListPage = () => {
                 {loading ? (<div className="flex items-center justify-center h-48"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" /></div>
                 ) : filtered.length === 0 ? (<div className="flex flex-col items-center justify-center py-16 text-slate-400"><FileText className="w-12 h-12 mb-3 opacity-30" /><p className="text-sm">No transactions found</p></div>
                 ) : (
-                    <table className="w-full"><thead><tr className="border-b border-slate-200">
-                        <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">No.</th>
-                        <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Type</th>
-                        <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Created By</th>
-                        <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Approval Status</th>
-                        <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Location</th>
-                        <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Created Date</th>
-                        <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
-                    </tr></thead>
-                        <tbody>{filtered.map((item, index) => (
-                            <tr key={item.transactionId} className="border-b border-slate-100 hover:bg-slate-50/50">
-                                <td className="px-5 py-3.5 text-sm font-medium text-slate-900">{index + 1}</td>
-                                <td className="px-5 py-3.5"><span className={`inline-flex px-2.5 py-0.5 text-xs font-medium rounded-full border ${typeBadge(item.transactionType)}`}>{TransactionTypeLabels[item.transactionType] || item.transactionType}</span></td>
-                                <td className="px-5 py-3.5 text-sm text-slate-600">{item.createdBy?.fullName || '-'}</td>
-                                <td className="px-5 py-3.5"><span className={`inline-flex px-2.5 py-0.5 text-xs font-medium rounded-full border ${approveBadge(item.approveStatus)}`}>{ApproveStatusLabels[item.approveStatus] || item.approveStatus || '-'}</span></td>
-                                <td className="px-5 py-3.5 text-sm text-slate-600">{item.location || '-'}</td>
-                                <td className="px-5 py-3.5 text-sm text-slate-500">{formatDate(item.date)}</td>
-                                <td className="px-5 py-3.5">
-                                    <div className="flex items-center gap-1.5">
-                                        <ActionButton onClick={() => navigate('/transaction-details', { state: { transactionId: item.transactionId } })} icon={Eye} title="View Details" color="indigo" />
-                                        {item.approveStatus === ApproveStatus.PENDING && <>
-                                            {can('APPROVE_TRANSACTION') && <ActionButton onClick={() => handleApprove(item.transactionId)} icon={CheckCircle} title="Approve" color="green" />}
-                                            {can('REJECT_TRANSACTION') && <ActionButton onClick={() => handleReject(item.transactionId)} icon={XCircle} title="Reject" color="amber" />}
-                                            {can('UPDATE_TRANSACTION') && <ActionButton onClick={() => openEdit(item)} icon={Pencil} title="Edit" color="blue" />}
-                                            {can('DELETE_TRANSACTION') && <ActionButton onClick={() => handleDelete(item.transactionId)} icon={Trash2} title="Delete" color="red" />}
-                                        </>}
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}</tbody></table>
+                    <div className="overflow-x-auto w-full">
+                        <table className="w-full whitespace-nowrap"><thead><tr className="border-b border-slate-200">
+                            <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">No.</th>
+                            <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Type</th>
+                            <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Created By</th>
+                            <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Approval Status</th>
+                            <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Location</th>
+                            <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Created Date</th>
+                            <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
+                        </tr></thead>
+                            <tbody>{filtered.map((item, index) => (
+                                <tr key={item.transactionId} className="border-b border-slate-100 hover:bg-slate-50/50">
+                                    <td className="px-5 py-3.5 text-sm font-medium text-slate-900">{index + 1}</td>
+                                    <td className="px-5 py-3.5"><span className={`inline-flex px-2.5 py-0.5 text-xs font-medium rounded-full border ${typeBadge(item.transactionType)}`}>{TransactionTypeLabels[item.transactionType] || item.transactionType}</span></td>
+                                    <td className="px-5 py-3.5 text-sm text-slate-600">{item.createdBy?.fullName || '-'}</td>
+                                    <td className="px-5 py-3.5"><span className={`inline-flex px-2.5 py-0.5 text-xs font-medium rounded-full border ${approveBadge(item.approveStatus)}`}>{ApproveStatusLabels[item.approveStatus] || item.approveStatus || '-'}</span></td>
+                                    <td className="px-5 py-3.5 text-sm text-slate-600">{item.location || '-'}</td>
+                                    <td className="px-5 py-3.5 text-sm text-slate-500">{formatDate(item.date)}</td>
+                                    <td className="px-5 py-3.5">
+                                        <div className="flex items-center gap-1.5">
+                                            <ActionButton onClick={() => navigate('/transaction-details', { state: { transactionId: item.transactionId } })} icon={Eye} title="View Details" color="indigo" />
+                                            {item.approveStatus === ApproveStatus.PENDING && <>
+                                                {can('APPROVE_TRANSACTION') && <ActionButton onClick={() => handleApprove(item.transactionId)} icon={CheckCircle} title="Approve" color="green" />}
+                                                {can('REJECT_TRANSACTION') && <ActionButton onClick={() => handleReject(item.transactionId)} icon={XCircle} title="Reject" color="amber" />}
+                                                {can('UPDATE_TRANSACTION') && <ActionButton onClick={() => openEdit(item)} icon={Pencil} title="Edit" color="blue" />}
+                                                {can('DELETE_TRANSACTION') && <ActionButton onClick={() => handleDelete(item.transactionId)} icon={Trash2} title="Delete" color="red" />}
+                                            </>}
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}</tbody></table>
+                    </div>
                 )}
             </div>
 

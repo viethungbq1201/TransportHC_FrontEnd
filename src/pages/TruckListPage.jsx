@@ -158,60 +158,62 @@ const TruckListPage = () => {
                         <p className="text-sm">No trucks found</p>
                     </div>
                 ) : (
-                    <table className="w-full">
-                        <thead className="bg-slate-50">
-                            <tr className="border-b border-slate-200">
-                                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">#</th>
-                                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">License Plate</th>
-                                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Capacity</th>
-                                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
-                                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {filtered.map((truck, index) => (
-                                <tr key={truck.id} className="hover:bg-slate-50/50 transition-colors">
-                                    <td className="px-5 py-4 text-sm text-slate-500">{index + 1}</td>
-                                    <td className="px-5 py-4">
-                                        <div className="flex items-center gap-2">
-                                            <TruckIcon className="w-4 h-4 text-slate-400" />
-                                            <span className="text-sm font-medium text-slate-900">{truck.licensePlate}</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-5 py-4 text-sm text-slate-600">{truck.capacity} tons</td>
-                                    {/* Status cell */}
-                                    <td className="px-5 py-4">
-                                        <button
-                                            ref={el => { statusBtnRef.current[truck.id] = el; }}
-                                            onClick={(e) => {
-                                                if (!can('UPDATE_STATUS_TRUCK')) return;
-                                                if (statusDropdownId === truck.id) {
-                                                    setStatusDropdownId(null);
-                                                } else {
-                                                    const rect = e.currentTarget.getBoundingClientRect();
-                                                    setDropdownPos({ top: rect.bottom + 4, left: rect.left });
-                                                    setStatusDropdownId(truck.id);
-                                                }
-                                            }}
-                                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${can('UPDATE_STATUS_TRUCK') ? 'cursor-pointer hover:shadow-sm transition-shadow' : 'cursor-default'} ${statusBadgeClass(truck.status)}`}
-                                            disabled={!can('UPDATE_STATUS_TRUCK')}
-                                        >
-                                            <div className={`w-1.5 h-1.5 rounded-full ${statusDot(truck.status)}`} />
-                                            {TruckStatusLabels[truck.status] || truck.status}
-                                            {can('UPDATE_STATUS_TRUCK') && <ChevronDown className="w-3 h-3 ml-0.5 opacity-60" />}
-                                        </button>
-                                    </td>
-                                    <td className="px-5 py-4">
-                                        <div className="flex items-center gap-1.5">
-                                            <ActionButton onClick={() => setDetailTruck(truck)} icon={Eye} title="View" color="slate" />
-                                            {can('UPDATE_TRUCK') && <ActionButton onClick={() => openEdit(truck)} icon={Pencil} title="Edit" color="blue" />}
-                                            {can('DELETE_TRUCK') && <ActionButton onClick={() => setDeleteConfirm(truck)} icon={Trash2} title="Delete" color="red" />}
-                                        </div>
-                                    </td>
+                    <div className="overflow-x-auto w-full">
+                        <table className="w-full whitespace-nowrap">
+                            <thead className="bg-slate-50">
+                                <tr className="border-b border-slate-200">
+                                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">#</th>
+                                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">License Plate</th>
+                                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Capacity</th>
+                                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+                                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                                {filtered.map((truck, index) => (
+                                    <tr key={truck.id} className="hover:bg-slate-50/50 transition-colors">
+                                        <td className="px-5 py-4 text-sm text-slate-500">{index + 1}</td>
+                                        <td className="px-5 py-4">
+                                            <div className="flex items-center gap-2">
+                                                <TruckIcon className="w-4 h-4 text-slate-400" />
+                                                <span className="text-sm font-medium text-slate-900">{truck.licensePlate}</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-5 py-4 text-sm text-slate-600">{truck.capacity} tons</td>
+                                        {/* Status cell */}
+                                        <td className="px-5 py-4">
+                                            <button
+                                                ref={el => { statusBtnRef.current[truck.id] = el; }}
+                                                onClick={(e) => {
+                                                    if (!can('UPDATE_STATUS_TRUCK')) return;
+                                                    if (statusDropdownId === truck.id) {
+                                                        setStatusDropdownId(null);
+                                                    } else {
+                                                        const rect = e.currentTarget.getBoundingClientRect();
+                                                        setDropdownPos({ top: rect.bottom + 4, left: rect.left });
+                                                        setStatusDropdownId(truck.id);
+                                                    }
+                                                }}
+                                                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${can('UPDATE_STATUS_TRUCK') ? 'cursor-pointer hover:shadow-sm transition-shadow' : 'cursor-default'} ${statusBadgeClass(truck.status)}`}
+                                                disabled={!can('UPDATE_STATUS_TRUCK')}
+                                            >
+                                                <div className={`w-1.5 h-1.5 rounded-full ${statusDot(truck.status)}`} />
+                                                {TruckStatusLabels[truck.status] || truck.status}
+                                                {can('UPDATE_STATUS_TRUCK') && <ChevronDown className="w-3 h-3 ml-0.5 opacity-60" />}
+                                            </button>
+                                        </td>
+                                        <td className="px-5 py-4">
+                                            <div className="flex items-center gap-1.5">
+                                                <ActionButton onClick={() => setDetailTruck(truck)} icon={Eye} title="View" color="slate" />
+                                                {can('UPDATE_TRUCK') && <ActionButton onClick={() => openEdit(truck)} icon={Pencil} title="Edit" color="blue" />}
+                                                {can('DELETE_TRUCK') && <ActionButton onClick={() => setDeleteConfirm(truck)} icon={Trash2} title="Delete" color="red" />}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 )}
             </div>
 
