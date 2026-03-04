@@ -6,6 +6,7 @@ import scheduleService from '@/services/scheduleService';
 import transactionService from '@/services/transactionService';
 import inventoryService from '@/services/inventoryService';
 import reportService from '@/services/reportService';
+import usePermissions from '@/hooks/usePermissions';
 
 const StatCard = ({ title, value, icon: Icon, color, subtitle = '' }) => (
     <div className="bg-white rounded-xl border border-slate-200 p-5">
@@ -32,6 +33,7 @@ const STATUS_COLORS = {
 };
 
 const DashboardPage = () => {
+    const { isAdmin, userRoles } = usePermissions();
     const [stats, setStats] = useState({
         availableTrucks: 0,
         activeSchedules: 0,
@@ -66,6 +68,10 @@ const DashboardPage = () => {
 
     useEffect(() => {
         const loadData = async () => {
+            if (!isAdmin) {
+                setLoading(false);
+                return; // Do not fetch full metrics for non-admins to prevent 403 errors
+            }
             try {
                 // Fetch core entity arrays
                 const baseResults = await Promise.allSettled([
@@ -82,7 +88,7 @@ const DashboardPage = () => {
 
                 // 1. Calculate pie chart data tracking schedule distributions
                 const statusCounts = scheduleList.reduce((acc, curr) => {
-                    const statusStr = curr.status ? curr.status.toUpperCase() : 'UNKNOWN';
+                    const statusStr = curr.approveStatus ? curr.approveStatus.toUpperCase() : 'UNKNOWN';
                     acc[statusStr] = (acc[statusStr] || 0) + 1;
                     return acc;
                 }, {});
@@ -128,8 +134,8 @@ const DashboardPage = () => {
                 // 4. Set final aggregated stats
                 setStats({
                     availableTrucks: truckList.filter(t => t.status === 'AVAILABLE').length,
-                    activeSchedules: scheduleList.filter(s => s.status === 'IN_TRANSIT').length,
-                    pendingTransactions: transactionList.filter(t => t.status === 'PENDING').length,
+                    activeSchedules: scheduleList.filter(s => s.approveStatus === 'IN_TRANSIT').length,
+                    pendingTransactions: transactionList.filter(t => t.approveStatus === 'PENDING').length,
                     totalRevenue: formatCurrency(currentMonthFin.Revenue),
                     totalTrucks: truckList.length,
                     totalCosts: formatCurrency(currentMonthFin.Cost),
@@ -149,6 +155,20 @@ const DashboardPage = () => {
         return (
             <div className="flex items-center justify-center h-[70vh]">
                 <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
+            </div>
+        );
+    }
+
+    if (!isAdmin) {
+        return (
+            <div className="flex flex-col items-center justify-center h-[70vh] text-center px-4">
+                <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mb-6">
+                    <Truck className="w-10 h-10 text-indigo-600" />
+                </div>
+                <h1 className="text-3xl font-bold text-slate-900 mb-2">Welcome to TransportHC</h1>
+                <p className="text-slate-500 max-w-md">
+                    You are logged in as <span className="font-semibold text-indigo-600">{userRoles[0] || 'User'}</span>. Please use the sidebar menu to navigate to your accessible tools and functions.
+                </p>
             </div>
         );
     }
