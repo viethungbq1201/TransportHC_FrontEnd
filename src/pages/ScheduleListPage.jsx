@@ -225,7 +225,7 @@ const ScheduleListPage = () => {
                                     <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Duration</th>
                                     <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Financials / Proof</th>
                                     <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
-                                    <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider sticky right-0 bg-slate-50 dark:bg-slate-800/50">Actions</th>
+                                    <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -265,7 +265,7 @@ const ScheduleListPage = () => {
                                             </span>
                                             {item.approveBy && <div className="text-[10px] text-slate-400 dark:text-slate-500 mt-1.5 ml-1 font-medium">Approved by: {item.approveBy.fullName}</div>}
                                         </td>
-                                        <td className="px-6 py-4 sticky right-0 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800/40 transition-colors duration-200 border-l border-transparent dark:border-transparent">
+                                        <td className="px-6 py-4">
                                             <div className="flex items-center gap-2">
                                                 <ActionButton onClick={() => navigate('/transaction-details', { state: { transactionId: item.transaction?.transactionId } })} icon={Eye} title="Transaction Details" color="indigo" />
                                                 {item.approveStatus === ScheduleStatus.PENDING && <>
