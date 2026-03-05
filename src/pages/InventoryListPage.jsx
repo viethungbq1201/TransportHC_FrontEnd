@@ -225,12 +225,12 @@ const InventoryListPage = () => {
 
     return (
         <div>
-            <div className="flex items-start justify-between mb-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-900">Inventory Management</h1>
                     <p className="text-slate-500 text-sm mt-1">Track and manage inventory</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                     <input type="file" ref={importRef} accept=".xlsx,.xls" onChange={handleImport} className="hidden" />
                     <button onClick={() => importRef.current?.click()} className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 text-sm font-medium text-slate-700 rounded-lg hover:bg-slate-50 transition-colors">
                         <Upload className="w-4 h-4" /> Import
@@ -388,7 +388,7 @@ const InventoryListPage = () => {
                             />
                         </div>
                     </div>
-                    <div className="flex items-center gap-3 mt-4 pt-4 border-t border-slate-100">
+                    <div className="flex flex-wrap items-center gap-3 mt-4 pt-4 border-t border-slate-100">
                         <button
                             onClick={handleApplyFilter}
                             disabled={filtering}
@@ -430,36 +430,36 @@ const InventoryListPage = () => {
                     </div>
                 ) : (
                     <div className="overflow-x-auto w-full">
-                        <table className="w-full whitespace-nowrap" style={{ tableLayout: 'fixed' }}>
+                        <table className="w-full whitespace-nowrap min-w-full lg:min-w-[1000px] table-fixed">
                             <thead className="bg-slate-50">
                                 <tr className="border-b border-slate-200">
-                                    <th style={{ width: '5%' }} className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">#</th>
-                                    <th style={{ width: '20%' }} className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Product</th>
-                                    <th style={{ width: '13%' }} className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Category</th>
-                                    <th style={{ width: '13%' }} className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Price</th>
-                                    <th style={{ width: '12%' }} className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Quantity</th>
-                                    <th style={{ width: '10%' }} className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">In Transit</th>
-                                    <th style={{ width: '15%' }} className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Last Updated</th>
-                                    <th style={{ width: '12%' }} className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
+                                    <th className="text-left px-4 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider w-12">#</th>
+                                    <th className="text-left px-4 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Product</th>
+                                    <th className="hidden md:table-cell text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider w-32">Category</th>
+                                    <th className="hidden sm:table-cell text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider w-32">Price</th>
+                                    <th className="text-left px-4 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider w-24">Quantity</th>
+                                    <th className="hidden md:table-cell text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider w-28">In Transit</th>
+                                    <th className="hidden lg:table-cell text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider w-40">Last Updated</th>
+                                    <th className="text-right px-4 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider pr-6 w-32">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
                                 {filtered.map((item, index) => (
                                     <tr key={item.inventoryId} className="hover:bg-slate-50/50 transition-colors">
-                                        <td className="px-5 py-4 text-sm text-slate-500">{(hasLocalFilter || isFiltered) ? index + 1 : currentPage * PAGE_SIZE + index + 1}</td>
-                                        <td className="px-5 py-4">
+                                        <td className="px-4 sm:px-5 py-4 text-sm text-slate-500">{(hasLocalFilter || isFiltered) ? index + 1 : currentPage * PAGE_SIZE + index + 1}</td>
+                                        <td className="px-4 sm:px-5 py-4 truncate">
                                             <div className="flex items-center gap-2">
-                                                <Package className="w-4 h-4 text-indigo-400" />
-                                                <span className="text-sm font-medium text-slate-900">{item.product?.name || '-'}</span>
+                                                <Package className="w-4 h-4 text-indigo-400 flex-shrink-0" />
+                                                <span className="text-sm font-medium text-slate-900 truncate">{item.product?.name || '-'}</span>
                                             </div>
                                         </td>
-                                        <td className="px-5 py-4">
+                                        <td className="hidden md:table-cell px-5 py-4">
                                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-200">
                                                 {item.product?.category?.name || '-'}
                                             </span>
                                         </td>
-                                        <td className="px-5 py-4 text-sm text-slate-600">{formatPrice(item.product?.price)}</td>
-                                        <td className="px-5 py-4">
+                                        <td className="hidden sm:table-cell px-5 py-4 text-sm text-slate-600">{formatPrice(item.product?.price)}</td>
+                                        <td className="px-4 sm:px-5 py-4">
                                             <span className={`text-sm font-semibold ${(item.quantity || 0) < 20 ? 'text-red-600' : 'text-slate-900'}`}>
                                                 {(item.quantity ?? 0).toLocaleString()}
                                             </span>
@@ -467,10 +467,10 @@ const InventoryListPage = () => {
                                                 <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-50 text-red-600 border border-red-200">LOW</span>
                                             )}
                                         </td>
-                                        <td className="px-5 py-4 text-sm text-slate-600">{(item.inTransit ?? 0).toLocaleString()}</td>
-                                        <td className="px-5 py-4 text-sm text-slate-500">{formatDate(item.upToDate)}</td>
-                                        <td className="px-5 py-4">
-                                            <div className="flex items-center gap-1.5">
+                                        <td className="hidden md:table-cell px-5 py-4 text-sm text-slate-600">{(item.inTransit ?? 0).toLocaleString()}</td>
+                                        <td className="hidden lg:table-cell px-5 py-4 text-sm text-slate-500">{formatDate(item.upToDate)}</td>
+                                        <td className="px-4 sm:px-5 py-4">
+                                            <div className="flex items-center justify-end gap-1 sm:gap-1.5 pr-1">
                                                 <ActionButton onClick={() => setDetailItem(item)} icon={Eye} title="View" color="slate" />
                                                 {can('UPDATE_INVENTORY') && <ActionButton onClick={() => openEdit(item)} icon={Pencil} title="Edit" color="blue" />}
                                                 {can('DELETE_INVENTORY') && <ActionButton onClick={() => setDeleteConfirm(item)} icon={Trash2} title="Delete" color="red" />}
@@ -485,7 +485,7 @@ const InventoryListPage = () => {
 
                 {/* Pagination Controls */}
                 {!loading && !isFiltered && !hasLocalFilter && totalPages > 1 && (
-                    <div className="flex items-center justify-between px-5 py-3 border-t border-slate-200 bg-slate-50/50">
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-5 py-3 border-t border-slate-200 bg-slate-50/50">
                         <p className="text-sm text-slate-500">
                             Showing <span className="font-medium text-slate-700">{currentPage * PAGE_SIZE + 1}</span> to{' '}
                             <span className="font-medium text-slate-700">{Math.min((currentPage + 1) * PAGE_SIZE, totalElements)}</span> of{' '}

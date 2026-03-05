@@ -158,34 +158,34 @@ const ProductListPage = () => {
                     </div>
                 ) : (
                     <div className="overflow-x-auto w-full">
-                        <table className="w-full whitespace-nowrap">
+                        <table className="w-full whitespace-nowrap min-w-full lg:min-w-[800px] table-fixed">
                             <thead className="bg-slate-50">
                                 <tr className="border-b border-slate-200">
-                                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">#</th>
-                                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Product Name</th>
-                                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Category</th>
-                                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Price</th>
-                                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
+                                    <th className="text-left px-4 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider w-12">#</th>
+                                    <th className="text-left px-4 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Product Name</th>
+                                    <th className="hidden md:table-cell text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider w-40">Category</th>
+                                    <th className="hidden sm:table-cell text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider w-32">Price</th>
+                                    <th className="text-right px-4 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider w-24 pr-6">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
                                 {filtered.map((item, index) => (
                                     <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                                        <td className="px-5 py-4 text-sm text-slate-500">{hasLocalFilter ? index + 1 : currentPage * PAGE_SIZE + index + 1}</td>
-                                        <td className="px-5 py-4">
+                                        <td className="px-4 sm:px-5 py-4 text-sm text-slate-500">{hasLocalFilter ? index + 1 : currentPage * PAGE_SIZE + index + 1}</td>
+                                        <td className="px-4 sm:px-5 py-4 truncate">
                                             <div className="flex items-center gap-2">
-                                                <Package className="w-4 h-4 text-indigo-400" />
-                                                <span className="text-sm font-medium text-slate-900">{item.name}</span>
+                                                <Package className="w-4 h-4 text-indigo-400 flex-shrink-0" />
+                                                <span className="text-sm font-medium text-slate-900 truncate">{item.name}</span>
                                             </div>
                                         </td>
-                                        <td className="px-5 py-4">
+                                        <td className="hidden md:table-cell px-5 py-4">
                                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-200">
                                                 {item.category?.name || '-'}
                                             </span>
                                         </td>
-                                        <td className="px-5 py-4 text-sm font-medium text-slate-900">{formatPrice(item.price)}</td>
-                                        <td className="px-5 py-4">
-                                            <div className="flex items-center gap-1.5">
+                                        <td className="hidden sm:table-cell px-5 py-4 text-sm font-medium text-slate-900">{formatPrice(item.price)}</td>
+                                        <td className="px-4 sm:px-5 py-4">
+                                            <div className="flex items-center justify-end gap-1 sm:gap-1.5 pr-1">
                                                 <ActionButton onClick={() => setDetailItem(item)} icon={Eye} title="View" color="slate" />
                                                 {can('UPDATE_PRODUCT') && <ActionButton onClick={() => openEdit(item)} icon={Pencil} title="Edit" color="blue" />}
                                                 {can('DELETE_PRODUCT') && <ActionButton onClick={() => setDeleteConfirm(item)} icon={Trash2} title="Delete" color="red" />}

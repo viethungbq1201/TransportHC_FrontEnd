@@ -148,7 +148,7 @@ const LoginPage = () => {
 
                         {/* Server Notice */}
                         <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800">
-                            ⚠️ If login takes too long or fails, please try again after a few seconds.
+                            ⚠️ If login takes too long, please wait a few seconds or it fails, please try again.
                             The system is deployed using a free hosting service, so the server may sleep when inactive.
                         </div>
 
