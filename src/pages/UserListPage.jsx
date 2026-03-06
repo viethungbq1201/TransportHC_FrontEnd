@@ -57,6 +57,8 @@ const UserListPage = () => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    const currentStatusUser = users.find(u => u.id === statusDropdownId);
+
     const filtered = users.filter(u => {
         const term = search.toLowerCase();
         const matchSearch = !search ||
@@ -97,8 +99,8 @@ const UserListPage = () => {
             phoneNumber: user.phoneNumber || '',
             address: user.address || '',
             roles: user.roles ? [...user.roles] : ['DRIVER'],
-            basicSalary: user.basicSalary || '',
-            advanceMoney: user.advanceMoney || '',
+            basicSalary: user.basicSalary ?? '',
+            advanceMoney: user.advanceMoney ?? '',
         });
         setShowModal(true);
     };
@@ -115,8 +117,8 @@ const UserListPage = () => {
                     address: form.address,
                     status: editingUser.status || UserStatus.AVAILABLE,
                     roles: form.roles,
-                    basicSalary: Number(form.basicSalary) || 1,
-                    advanceMoney: form.advanceMoney || '',
+                    basicSalary: Number(form.basicSalary) ?? 1,
+                    advanceMoney: Number(form.advanceMoney) ?? 0,
                 };
                 await userService.updateUser(editingUser.id, payload);
             } else {
@@ -129,7 +131,7 @@ const UserListPage = () => {
                     status: UserStatus.AVAILABLE,
                     roles: form.roles,
                     basicSalary: Number(form.basicSalary) || 1,
-                    advanceMoney: form.advanceMoney || '',
+                    advanceMoney: Number(form.advanceMoney) || 0,
                 };
                 await userService.createUser(payload);
             }
@@ -324,14 +326,14 @@ const UserListPage = () => {
                                 users.find(u => u.id === statusDropdownId),
                                 value
                             )}
-                            className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50 ${users.find(u => u.id === statusDropdownId)?.status === value
+                            className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50 ${currentStatusUser?.status === value
                                 ? 'text-indigo-600 font-medium'
                                 : 'text-slate-700'
                                 }`}
                         >
                             <div className={`w-2 h-2 rounded-full ${statusDot(value)}`} />
                             {UserStatusLabels[value]}
-                            {users.find(u => u.id === statusDropdownId)?.status === value && (
+                            {currentStatusUser?.status === value && (
                                 <span className="ml-auto text-indigo-500">✓</span>
                             )}
                         </button>
@@ -508,9 +510,11 @@ const UserListPage = () => {
                                         <label className="block text-sm font-semibold text-slate-700 mb-1.5">Phone Number <span className="text-red-500">*</span></label>
                                         <input
                                             value={form.phoneNumber}
+                                            type="tel"
                                             onChange={e => setForm({ ...form, phoneNumber: e.target.value })}
-                                            placeholder="0909123456"
+                                            placeholder="0912345678"
                                             required
+                                            pattern="[0-9]{10}"
                                             className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                                         />
                                     </div>
@@ -539,6 +543,7 @@ const UserListPage = () => {
                                             onChange={e => setForm({ ...form, basicSalary: e.target.value })}
                                             placeholder="Required (>0)"
                                             min="1"
+                                            step="1000"
                                             required
                                             className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                                         />
@@ -549,9 +554,9 @@ const UserListPage = () => {
                                             type="number"
                                             value={form.advanceMoney}
                                             onChange={e => setForm({ ...form, advanceMoney: e.target.value })}
-                                            placeholder="Required (>0)"
-                                            min="1"
-                                            required
+                                            placeholder="Optional (>=0)"
+                                            min="0"
+                                            step="1000"
                                             className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                                         />
                                     </div>
