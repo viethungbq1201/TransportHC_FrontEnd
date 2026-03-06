@@ -116,7 +116,7 @@ const UserListPage = () => {
                     status: editingUser.status || UserStatus.AVAILABLE,
                     roles: form.roles,
                     basicSalary: Number(form.basicSalary) || 1,
-                    advanceMoney: Number(form.advanceMoney) || 1,
+                    advanceMoney: form.advanceMoney || '',
                 };
                 await userService.updateUser(editingUser.id, payload);
             } else {
@@ -129,7 +129,7 @@ const UserListPage = () => {
                     status: UserStatus.AVAILABLE,
                     roles: form.roles,
                     basicSalary: Number(form.basicSalary) || 1,
-                    advanceMoney: Number(form.advanceMoney) || 1,
+                    advanceMoney: form.advanceMoney || '',
                 };
                 await userService.createUser(payload);
             }

@@ -191,7 +191,7 @@ const CostListPage = () => {
 
             {showModal && (<div className="fixed inset-0 z-50 flex items-center justify-center"><div className="absolute inset-0 bg-black/30" onClick={() => setShowModal(false)} /><div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6"><div className="flex items-center justify-between mb-5"><h2 className="text-lg font-semibold text-slate-900">{editingItem ? 'Edit Cost' : 'Add New Cost'}</h2><button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600"><X className="w-5 h-5" /></button></div><form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Schedule</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Schedule<span className="text-red-500">*</span></label>
                     <select value={form.scheduleId} onChange={e => setForm({ ...form, scheduleId: e.target.value })} required className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
                         <option value="">Select Schedule...</option>
                         {schedules.filter(s => s.approveStatus === ScheduleStatus.IN_TRANSIT).map(s => (
@@ -200,7 +200,7 @@ const CostListPage = () => {
                     </select>
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Cost Type</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Cost Type<span className="text-red-500">*</span></label>
                     <select value={form.costTypeId} onChange={e => setForm({ ...form, costTypeId: e.target.value })} required className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
                         <option value="">Select Type...</option>
                         {costTypes.map(c => (
@@ -208,9 +208,9 @@ const CostListPage = () => {
                         ))}
                     </select>
                 </div>
-                <div><label className="block text-sm font-medium text-slate-700 mb-1">Amount</label><input type="number" min="0" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} required className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20" /></div>
+                <div><label className="block text-sm font-medium text-slate-700 mb-1">Price<span className="text-red-500">*</span></label><input type="number" min="0" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} required className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20" /></div>
                 <div><label className="block text-sm font-medium text-slate-700 mb-1">Documentary Proof</label><input type="text" value={form.documentaryProof || ''} onChange={e => setForm({ ...form, documentaryProof: e.target.value })} placeholder="Link or note" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20" /></div>
-                <div><label className="block text-sm font-medium text-slate-700 mb-1">Description</label><textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={2} required className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20" /></div>
+                <div><label className="block text-sm font-medium text-slate-700 mb-1">Description<span className="text-red-500">*</span></label><textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={2} required className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20" /></div>
                 <div className="flex gap-3 pt-2"><button type="button" onClick={() => setShowModal(false)} className="flex-1 py-2.5 border border-slate-200 text-sm font-medium text-slate-700 rounded-lg hover:bg-slate-50">Cancel</button><button type="submit" disabled={saving} className="flex-1 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">{saving ? 'Saving...' : editingItem ? 'Update' : 'Create'}</button></div>
             </form></div></div>)}
 
