@@ -544,7 +544,7 @@ const UserListPage = () => {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-semibold text-slate-700 mb-1.5">Advance Money <span className="text-red-500">*</span></label>
+                                        <label className="block text-sm font-semibold text-slate-700 mb-1.5">Advance Money </label>
                                         <input
                                             type="number"
                                             value={form.advanceMoney}
