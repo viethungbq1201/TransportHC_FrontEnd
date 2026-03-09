@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import toast from 'react-hot-toast';
 import { Plus, Search, Pencil, Trash2, X, DollarSign, CheckCircle, XCircle } from 'lucide-react';
 import ActionButton from '@/components/ActionButton';
 import costService from '@/services/costService';
@@ -30,8 +31,8 @@ const CostListPage = () => {
     const [saving, setSaving] = useState(false);
     const [deleteConfirmId, setDeleteConfirmId] = useState(null);
 
-    const fetchData = async () => {
-        setLoading(true);
+    const loadData = useCallback(async (showSpinner = true) => {
+        if (showSpinner) setLoading(true);
         try {
             const results = await Promise.allSettled([
                 costService.getAllCosts(),
@@ -48,14 +49,11 @@ const CostListPage = () => {
             setCostTypes(Array.isArray(typeData) ? typeData : []);
         } catch (error) {
             console.error(error);
-            setItems([]);
-            setSchedules([]);
-            setCostTypes([]);
         } finally {
-            setLoading(false);
+            if (showSpinner) setLoading(false);
         }
-    };
-    useEffect(() => { fetchData(); }, []);
+    }, []);
+    useEffect(() => { loadData(true); }, [loadData]);
 
     const filtered = items.filter(c => {
         if (filterCostType && String(c.costType?.costTypeId) !== filterCostType) return false;
@@ -95,20 +93,33 @@ const CostListPage = () => {
 
             if (editingItem) {
                 await costService.updateCost(editingItem.costId, payload);
+                toast.success('Cost updated');
             } else {
                 await costService.createCost(payload);
+                toast.success('Cost created');
             }
             setShowModal(false);
-            fetchData();
-        } catch (err) { alert(err?.message || 'Error'); }
+            loadData(false);
+        } catch (err) { toast.error(err?.message || 'Error'); }
         finally { setSaving(false); }
     };
 
-    // Approve/Reject use GET — no request body!
-    const handleApprove = async (id) => { try { await costService.approveCost(id); fetchData(); } catch (err) { alert(err?.message || 'Error'); } };
-    const handleReject = async (id) => { try { await costService.rejectCost(id); fetchData(); } catch (err) { alert(err?.message || 'Error'); } };
+    const handleApprove = async (id) => {
+        setItems(prev => prev.map(i => i.costId === id ? { ...i, approveStatus: 'APPROVED' } : i));
+        try { await costService.approveCost(id); toast.success('Cost approved'); } catch (err) { toast.error(err?.message || 'Error'); loadData(false); }
+    };
+    const handleReject = async (id) => {
+        setItems(prev => prev.map(i => i.costId === id ? { ...i, approveStatus: 'REJECTED' } : i));
+        try { await costService.rejectCost(id); toast.success('Cost rejected'); } catch (err) { toast.error(err?.message || 'Error'); loadData(false); }
+    };
     const handleDelete = (id) => { setDeleteConfirmId(id); };
-    const confirmDelete = async () => { if (!deleteConfirmId) return; try { await costService.deleteCost(deleteConfirmId); fetchData(); setDeleteConfirmId(null); } catch (err) { alert(err?.message || 'Error'); } };
+    const confirmDelete = async () => {
+        if (!deleteConfirmId) return;
+        setItems(prev => prev.filter(i => i.costId !== deleteConfirmId));
+        setDeleteConfirmId(null);
+        try { await costService.deleteCost(deleteConfirmId); toast.success('Cost deleted'); }
+        catch (err) { toast.error(err?.message || 'Error'); loadData(false); }
+    };
 
     const groupedCosts = filtered.reduce((acc, item) => {
         const sId = item.schedule?.scheduleId || 'Unknown Schedule';

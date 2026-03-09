@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import toast from 'react-hot-toast';
 import { Plus, Search, Pencil, Trash2, X, Users as UsersIcon, Eye, ChevronDown } from 'lucide-react';
 import ActionButton from '@/components/ActionButton';
 import userService from '@/services/userService';
@@ -29,19 +30,19 @@ const UserListPage = () => {
     const [statusDropdownId, setStatusDropdownId] = useState(null);
     const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 });
 
-    const fetchUsers = async () => {
+    const loadData = useCallback(async (showSpinner = true) => {
+        if (showSpinner) setLoading(true);
         try {
             const data = await userService.getUsers();
             setUsers(Array.isArray(data) ? data : []);
         } catch (err) {
             console.error(err);
-            setUsers([]);
         } finally {
-            setLoading(false);
+            if (showSpinner) setLoading(false);
         }
-    };
+    }, []);
 
-    useEffect(() => { fetchUsers(); }, []);
+    useEffect(() => { loadData(true); }, [loadData]);
 
     // Close status dropdown when clicking outside
     const statusDropdownRef = useRef(null);
@@ -121,6 +122,7 @@ const UserListPage = () => {
                     advanceMoney: Number(form.advanceMoney) ?? 0,
                 };
                 await userService.updateUser(editingUser.id, payload);
+                toast.success('User updated');
             } else {
                 const payload = {
                     username: form.username,
@@ -134,11 +136,12 @@ const UserListPage = () => {
                     advanceMoney: Number(form.advanceMoney) || 0,
                 };
                 await userService.createUser(payload);
+                toast.success('User created');
             }
             setShowModal(false);
-            fetchUsers();
+            loadData(false);
         } catch (err) {
-            alert(err?.message || 'Error occurred');
+            toast.error(err?.message || 'Error occurred');
         } finally {
             setSaving(false);
         }
@@ -146,22 +149,24 @@ const UserListPage = () => {
 
     const handleDelete = async () => {
         if (!deleteConfirm) return;
+        setUsers(prev => prev.filter(u => u.id !== deleteConfirm.id));
+        setDeleteConfirm(null);
         try {
             await userService.deleteUser(deleteConfirm.id);
-            fetchUsers();
+            toast.success('User deleted');
         } catch (err) {
-            alert(err?.message || 'Error');
-        } finally {
-            setDeleteConfirm(null);
+            toast.error(err?.message || 'Error');
+            loadData(false);
         }
     };
 
     const handleStatusChange = async (user, newStatus) => {
         setStatusDropdownId(null);
+        setUsers(prev => prev.map(u => u.id === user.id ? { ...u, status: newStatus } : u));
         try {
             await userService.updateStatus(user.id, { status: newStatus });
-            fetchUsers();
-        } catch (err) { alert(err?.message || 'Error'); }
+            toast.success('Status updated');
+        } catch (err) { toast.error(err?.message || 'Error'); loadData(false); }
     };
 
     const roleBadge = (role) => {

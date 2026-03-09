@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import toast from 'react-hot-toast';
 import { Plus, Search, Pencil, Trash2, X, Package, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 import ActionButton from '@/components/ActionButton';
 import productService from '@/services/productService';
@@ -31,8 +32,8 @@ const ProductListPage = () => {
     const [totalElements, setTotalElements] = useState(0);
     const PAGE_SIZE = 10;
 
-    const fetchData = async (page = currentPage) => {
-        setLoading(true);
+    const loadData = useCallback(async (page = 0, showSpinner = true) => {
+        if (showSpinner) setLoading(true);
         try {
             const results = await Promise.allSettled([
                 productService.getProductsPaged(page, PAGE_SIZE),
@@ -52,14 +53,11 @@ const ProductListPage = () => {
             setCategories(Array.isArray(catData) ? catData : []);
         } catch (error) {
             console.error(error);
-            setItems([]);
-            setAllItems([]);
-            setCategories([]);
         }
-        finally { setLoading(false); }
-    };
+        finally { if (showSpinner) setLoading(false); }
+    }, []);
 
-    useEffect(() => { fetchData(0); }, []);
+    useEffect(() => { loadData(0, true); }, [loadData]);
 
     // Determine if local search/category filter is active
     const hasLocalFilter = !!(search || categoryFilter);
@@ -101,22 +99,26 @@ const ProductListPage = () => {
             };
             if (editingItem) {
                 await productService.updateProduct(editingItem.id, payload);
+                toast.success('Product updated');
             } else {
                 await productService.createProduct(payload);
+                toast.success('Product created');
             }
             setShowModal(false);
-            fetchData(0);
-        } catch (err) { alert(err?.message || 'Error saving product'); }
+            loadData(0, false);
+        } catch (err) { toast.error(err?.message || 'Error'); }
         finally { setSaving(false); }
     };
 
     const handleDelete = async () => {
         if (!deleteConfirm) return;
+        setItems(prev => prev.filter(i => i.id !== deleteConfirm.id));
+        setAllItems(prev => prev.filter(i => i.id !== deleteConfirm.id));
+        setDeleteConfirm(null);
         try {
             await productService.deleteProduct(deleteConfirm.id);
-            fetchData(0);
-        } catch (err) { alert(err?.message || 'Error deleting product'); }
-        finally { setDeleteConfirm(null); }
+            toast.success('Product deleted');
+        } catch (err) { toast.error(err?.message || 'Error'); loadData(0, false); }
     };
 
     return (
@@ -208,7 +210,7 @@ const ProductListPage = () => {
                         </p>
                         <div className="flex items-center gap-1">
                             <button
-                                onClick={() => fetchData(currentPage - 1)}
+                                onClick={() => loadData(currentPage - 1)}
                                 disabled={currentPage === 0}
                                 className="p-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                             >
@@ -221,22 +223,22 @@ const ProductListPage = () => {
                                 if (end > totalPages) { end = totalPages; start = Math.max(0, end - MAX_VISIBLE); }
                                 const pages = [];
                                 if (start > 0) {
-                                    pages.push(<button key={0} onClick={() => fetchData(0)} className="w-8 h-8 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">1</button>);
+                                    pages.push(<button key={0} onClick={() => loadData(0)} className="w-8 h-8 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">1</button>);
                                     if (start > 1) pages.push(<span key="start-dots" className="w-8 h-8 flex items-center justify-center text-slate-400 text-sm">…</span>);
                                 }
                                 for (let i = start; i < end; i++) {
                                     pages.push(
-                                        <button key={i} onClick={() => fetchData(i)} className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${i === currentPage ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'}`}>{i + 1}</button>
+                                        <button key={i} onClick={() => loadData(i)} className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${i === currentPage ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'}`}>{i + 1}</button>
                                     );
                                 }
                                 if (end < totalPages) {
                                     if (end < totalPages - 1) pages.push(<span key="end-dots" className="w-8 h-8 flex items-center justify-center text-slate-400 text-sm">…</span>);
-                                    pages.push(<button key={totalPages - 1} onClick={() => fetchData(totalPages - 1)} className="w-8 h-8 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">{totalPages}</button>);
+                                    pages.push(<button key={totalPages - 1} onClick={() => loadData(totalPages - 1)} className="w-8 h-8 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">{totalPages}</button>);
                                 }
                                 return pages;
                             })()}
                             <button
-                                onClick={() => fetchData(currentPage + 1)}
+                                onClick={() => loadData(currentPage + 1)}
                                 disabled={currentPage >= totalPages - 1}
                                 className="p-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                             >

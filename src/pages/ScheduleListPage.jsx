@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Pencil, Trash2, X, CalendarClock, CheckCircle, XCircle, StopCircle, Ban, Eye } from 'lucide-react';
 import ActionButton from '@/components/ActionButton';
@@ -50,8 +51,8 @@ const ScheduleListPage = () => {
         .filter(s => s.transaction?.transactionId)
         .map(s => s.transaction.transactionId);
 
-    const fetchData = async () => {
-        setLoading(true);
+    const loadAllData = useCallback(async (showSpinner = true) => {
+        if (showSpinner) setLoading(true);
         try {
             const results = await Promise.allSettled([
                 scheduleService.getAllSchedules(),
@@ -74,16 +75,11 @@ const ScheduleListPage = () => {
             setTransactions(Array.isArray(transData) ? transData : []);
         } catch (error) {
             console.error(error);
-            setItems([]);
-            setDrivers([]);
-            setTrucks([]);
-            setRoutes([]);
-            setTransactions([]);
         } finally {
-            setLoading(false);
+            if (showSpinner) setLoading(false);
         }
-    };
-    useEffect(() => { fetchData(); }, []);
+    }, []);
+    useEffect(() => { loadAllData(true); }, [loadAllData]);
 
     const filtered = items.filter(s => {
         const term = search.toLowerCase();
@@ -128,29 +124,48 @@ const ScheduleListPage = () => {
 
             if (editingItem) {
                 await scheduleService.updateSchedule(editingItem.scheduleId || editingItem.id, payload);
+                toast.success('Schedule updated successfully');
             } else {
                 await scheduleService.createSchedule(payload);
+                toast.success('Schedule created successfully');
             }
             setShowModal(false);
-            fetchData();
-        } catch (err) { alert(err?.message || 'Error'); }
+            loadAllData(false); // silent refresh — no spinner
+        } catch (err) { toast.error(err?.message || 'Error'); }
         finally { setSaving(false); }
     };
 
-    // Approve/Reject/Cancel use GET — no request body!
-    const handleApprove = async (id) => { try { await scheduleService.approveSchedule(id); fetchData(); } catch (err) { alert(err?.message || 'Error'); } };
-    const handleReject = async (id) => { try { await scheduleService.rejectSchedule(id); fetchData(); } catch (err) { alert(err?.message || 'Error'); } };
-    const handleCancel = async (id) => { try { await scheduleService.cancelSchedule(id); fetchData(); } catch (err) { alert(err?.message || 'Error'); } };
+    // Approve/Reject/Cancel — optimistic local state update
+    const handleApprove = async (id) => {
+        setItems(prev => prev.map(i => (i.scheduleId || i.id) === id ? { ...i, approveStatus: 'IN_TRANSIT' } : i));
+        try { await scheduleService.approveSchedule(id); toast.success('Schedule approved'); } catch (err) { toast.error(err?.message || 'Error'); loadAllData(false); }
+    };
+    const handleReject = async (id) => {
+        setItems(prev => prev.map(i => (i.scheduleId || i.id) === id ? { ...i, approveStatus: 'REJECTED' } : i));
+        try { await scheduleService.rejectSchedule(id); toast.success('Schedule rejected'); } catch (err) { toast.error(err?.message || 'Error'); loadAllData(false); }
+    };
+    const handleCancel = async (id) => {
+        setItems(prev => prev.map(i => (i.scheduleId || i.id) === id ? { ...i, approveStatus: 'CANCELLED' } : i));
+        try { await scheduleService.cancelSchedule(id); toast.success('Schedule cancelled'); } catch (err) { toast.error(err?.message || 'Error'); loadAllData(false); }
+    };
 
     const openEndModal = (id) => { setEndingScheduleId(id); setEndForm({ documentaryProof: '' }); setShowEndModal(true); };
     const handleEndSchedule = async (e) => {
         e.preventDefault();
-        try { await scheduleService.endSchedule(endingScheduleId, endForm); setShowEndModal(false); fetchData(); }
-        catch (err) { alert(err?.message || 'Error'); }
+        setItems(prev => prev.map(i => (i.scheduleId || i.id) === endingScheduleId ? { ...i, approveStatus: 'DONE' } : i));
+        setShowEndModal(false);
+        try { await scheduleService.endSchedule(endingScheduleId, endForm); toast.success('Schedule completed'); }
+        catch (err) { toast.error(err?.message || 'Error'); loadAllData(false); }
     };
 
     const handleDelete = (id) => { setDeleteConfirmId(id); };
-    const confirmDelete = async () => { if (!deleteConfirmId) return; try { await scheduleService.deleteSchedule(deleteConfirmId); fetchData(); setDeleteConfirmId(null); } catch (err) { alert(err?.message || 'Error'); } };
+    const confirmDelete = async () => {
+        if (!deleteConfirmId) return;
+        setItems(prev => prev.filter(i => (i.scheduleId || i.id) !== deleteConfirmId));
+        setDeleteConfirmId(null);
+        try { await scheduleService.deleteSchedule(deleteConfirmId); toast.success('Schedule deleted'); }
+        catch (err) { toast.error(err?.message || 'Error'); loadAllData(false); }
+    };
 
     return (
         <div className="min-h-full bg-slate-50/50 dark:bg-slate-950/50 text-slate-900 dark:text-slate-100 transition-colors duration-300">

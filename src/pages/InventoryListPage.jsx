@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import toast from 'react-hot-toast';
 import { Plus, Search, Pencil, Trash2, X, Warehouse, Package, AlertTriangle, Download, Upload, ArrowUp, Eye, SlidersHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
 import ActionButton from '@/components/ActionButton';
 import inventoryService from '@/services/inventoryService';
@@ -62,8 +63,8 @@ const InventoryListPage = () => {
     const [totalElements, setTotalElements] = useState(0);
     const PAGE_SIZE = 10;
 
-    const fetchData = async (page = currentPage) => {
-        setLoading(true);
+    const loadData = useCallback(async (page = 0, showSpinner = true) => {
+        if (showSpinner) setLoading(true);
         try {
             const results = await Promise.allSettled([
                 inventoryService.getInventoriesPaged(page, PAGE_SIZE),
@@ -86,15 +87,11 @@ const InventoryListPage = () => {
             setCategories(Array.isArray(catData) ? catData : []);
         } catch (error) {
             console.error(error);
-            setItems([]);
-            setAllItems([]);
-            setProducts([]);
-            setCategories([]);
         }
-        finally { setLoading(false); }
-    };
+        finally { if (showSpinner) setLoading(false); }
+    }, []);
 
-    useEffect(() => { fetchData(0); }, []);
+    useEffect(() => { loadData(0, true); }, [loadData]);
 
     // Determine if local search/category filter is active
     const hasLocalFilter = !!(search || categoryFilter);
@@ -130,7 +127,7 @@ const InventoryListPage = () => {
             // Disable regular filters when advanced filter is active
             setSearch('');
             setCategoryFilter('');
-        } catch (err) { alert(err?.message || 'Error filtering inventory'); }
+        } catch (err) { toast.error(err?.message || 'Error filtering inventory'); }
         finally { setFiltering(false); }
     };
 
@@ -146,7 +143,7 @@ const InventoryListPage = () => {
         setShowAdvFilter(false);
         setSearch('');
         setCategoryFilter('');
-        fetchData(0);
+        loadData(0);
     };
 
     const totalProducts = allItems.length;
@@ -179,37 +176,39 @@ const InventoryListPage = () => {
         setSaving(true);
         try {
             if (editingItem) {
-                // UpdateRequest: only quantity
                 await inventoryService.updateInventory(editingItem.inventoryId, {
                     quantity: Number(form.quantity),
                 });
+                toast.success('Inventory updated');
             } else {
-                // CreateRequest: productId, quantity, upToDate
                 await inventoryService.createInventory({
                     productId: Number(form.productId),
                     quantity: Number(form.quantity),
                     upToDate: new Date().toISOString(),
                 });
+                toast.success('Inventory created');
             }
             setShowModal(false);
-            fetchData(0);
-        } catch (err) { alert(err?.message || 'Error saving inventory'); }
+            loadData(0, false);
+        } catch (err) { toast.error(err?.message || 'Error'); }
         finally { setSaving(false); }
     };
 
     const handleDelete = async () => {
         if (!deleteConfirm) return;
+        setItems(prev => prev.filter(i => i.inventoryId !== deleteConfirm.inventoryId));
+        setAllItems(prev => prev.filter(i => i.inventoryId !== deleteConfirm.inventoryId));
+        setDeleteConfirm(null);
         try {
             await inventoryService.deleteInventory(deleteConfirm.inventoryId);
-            fetchData(0);
-        } catch (err) { alert(err?.message || 'Error deleting inventory'); }
-        finally { setDeleteConfirm(null); }
+            toast.success('Inventory deleted');
+        } catch (err) { toast.error(err?.message || 'Error'); loadData(0, false); }
     };
 
     const handleExport = async () => {
         setExporting(true);
-        try { await inventoryService.exportInventory(); }
-        catch (err) { alert(err?.message || 'Error exporting inventory'); }
+        try { await inventoryService.exportInventory(); toast.success('Export complete'); }
+        catch (err) { toast.error(err?.message || 'Error exporting'); }
         finally { setExporting(false); }
     };
 
@@ -218,8 +217,9 @@ const InventoryListPage = () => {
         if (!file) return;
         try {
             await inventoryService.importInventory(file);
-            fetchData(0);
-        } catch (err) { alert(err?.message || 'Error importing inventory'); }
+            toast.success('Import complete');
+            loadData(0, false);
+        } catch (err) { toast.error(err?.message || 'Error importing'); }
         finally { if (importRef.current) importRef.current.value = ''; }
     };
 
@@ -493,7 +493,7 @@ const InventoryListPage = () => {
                         </p>
                         <div className="flex items-center gap-1">
                             <button
-                                onClick={() => fetchData(currentPage - 1)}
+                                onClick={() => loadData(currentPage - 1)}
                                 disabled={currentPage === 0}
                                 className="p-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                             >
@@ -506,22 +506,22 @@ const InventoryListPage = () => {
                                 if (end > totalPages) { end = totalPages; start = Math.max(0, end - MAX_VISIBLE); }
                                 const pages = [];
                                 if (start > 0) {
-                                    pages.push(<button key={0} onClick={() => fetchData(0)} className="w-8 h-8 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">1</button>);
+                                    pages.push(<button key={0} onClick={() => loadData(0)} className="w-8 h-8 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">1</button>);
                                     if (start > 1) pages.push(<span key="start-dots" className="w-8 h-8 flex items-center justify-center text-slate-400 text-sm">…</span>);
                                 }
                                 for (let i = start; i < end; i++) {
                                     pages.push(
-                                        <button key={i} onClick={() => fetchData(i)} className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${i === currentPage ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'}`}>{i + 1}</button>
+                                        <button key={i} onClick={() => loadData(i)} className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${i === currentPage ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'}`}>{i + 1}</button>
                                     );
                                 }
                                 if (end < totalPages) {
                                     if (end < totalPages - 1) pages.push(<span key="end-dots" className="w-8 h-8 flex items-center justify-center text-slate-400 text-sm">…</span>);
-                                    pages.push(<button key={totalPages - 1} onClick={() => fetchData(totalPages - 1)} className="w-8 h-8 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">{totalPages}</button>);
+                                    pages.push(<button key={totalPages - 1} onClick={() => loadData(totalPages - 1)} className="w-8 h-8 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">{totalPages}</button>);
                                 }
                                 return pages;
                             })()}
                             <button
-                                onClick={() => fetchData(currentPage + 1)}
+                                onClick={() => loadData(currentPage + 1)}
                                 disabled={currentPage >= totalPages - 1}
                                 className="p-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                             >

@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import toast from 'react-hot-toast';
 import { Plus, Search, Pencil, Trash2, X, Tag } from 'lucide-react';
 import ActionButton from '@/components/ActionButton';
 import costTypeService from '@/services/costTypeService';
@@ -16,11 +17,13 @@ const CostTypeListPage = () => {
     const [actionMenuId, setActionMenuId] = useState(null);
     const [deleteConfirmId, setDeleteConfirmId] = useState(null);
 
-    const fetchData = async () => { try { const data = await costTypeService.getCostTypes(); setItems(Array.isArray(data) ? data : []); } catch { setItems([]); } finally { setLoading(false); } };
-    useEffect(() => { fetchData(); }, []);
+    const loadData = useCallback(async (showSpinner = true) => {
+        if (showSpinner) setLoading(true);
+        try { const data = await costTypeService.getCostTypes(); setItems(Array.isArray(data) ? data : []); } catch { /* keep existing */ } finally { if (showSpinner) setLoading(false); }
+    }, []);
+    useEffect(() => { loadData(true); }, [loadData]);
 
     const filtered = items.filter(c => !search || c.name?.toLowerCase().includes(search.toLowerCase()));
-    // const formatDate = (d) => { if (!d) return '-'; try { return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); } catch { return '-'; } };
     const formatDate = (d) => {
         if (!d) return '-';
         try {
@@ -30,9 +33,22 @@ const CostTypeListPage = () => {
 
     const openCreate = () => { setEditingItem(null); setForm({ name: '' }); setShowModal(true); };
     const openEdit = (item) => { setEditingItem(item); setForm({ name: item.name || '' }); setShowModal(true); };
-    const handleSubmit = async (e) => { e.preventDefault(); setSaving(true); try { if (editingItem) await costTypeService.updateCostType(editingItem.costTypeId, form); else await costTypeService.createCostType(form); setShowModal(false); fetchData(); } catch (err) { alert(err?.message || 'Error'); } finally { setSaving(false); } };
+    const handleSubmit = async (e) => {
+        e.preventDefault(); setSaving(true);
+        try {
+            if (editingItem) { await costTypeService.updateCostType(editingItem.costTypeId, form); toast.success('Cost type updated'); }
+            else { await costTypeService.createCostType(form); toast.success('Cost type created'); }
+            setShowModal(false); loadData(false);
+        } catch (err) { toast.error(err?.message || 'Error'); } finally { setSaving(false); }
+    };
     const handleDelete = (id) => { setDeleteConfirmId(id); };
-    const confirmDelete = async () => { if (!deleteConfirmId) return; try { await costTypeService.deleteCostType(deleteConfirmId); fetchData(); setDeleteConfirmId(null); } catch (err) { alert(err?.message || 'Error'); } };
+    const confirmDelete = async () => {
+        if (!deleteConfirmId) return;
+        setItems(prev => prev.filter(i => i.costTypeId !== deleteConfirmId));
+        setDeleteConfirmId(null);
+        try { await costTypeService.deleteCostType(deleteConfirmId); toast.success('Cost type deleted'); }
+        catch (err) { toast.error(err?.message || 'Error'); loadData(false); }
+    };
 
     return (
         <div>

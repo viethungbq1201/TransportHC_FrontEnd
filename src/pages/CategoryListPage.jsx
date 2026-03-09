@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import toast from 'react-hot-toast';
 import { Plus, Search, Pencil, Trash2, X, FolderTree, Eye } from 'lucide-react';
 import ActionButton from '@/components/ActionButton';
 import categoryService from '@/services/categoryService';
@@ -16,15 +17,16 @@ const CategoryListPage = () => {
     const [deleteConfirm, setDeleteConfirm] = useState(null);
     const [detailItem, setDetailItem] = useState(null);
 
-    const fetchData = async () => {
+    const loadData = useCallback(async (showSpinner = true) => {
+        if (showSpinner) setLoading(true);
         try {
             const data = await categoryService.getCategories();
             setItems(Array.isArray(data) ? data : []);
-        } catch { setItems([]); }
-        finally { setLoading(false); }
-    };
+        } catch { /* keep existing */ }
+        finally { if (showSpinner) setLoading(false); }
+    }, []);
 
-    useEffect(() => { fetchData(); }, []);
+    useEffect(() => { loadData(true); }, [loadData]);
 
     const filtered = items.filter(c => !search || c.name?.toLowerCase().includes(search.toLowerCase()));
 
@@ -47,22 +49,25 @@ const CategoryListPage = () => {
             const payload = { name: form.name };
             if (editingItem) {
                 await categoryService.updateCategory(editingItem.categoryId, payload);
+                toast.success('Category updated');
             } else {
                 await categoryService.createCategory(payload);
+                toast.success('Category created');
             }
             setShowModal(false);
-            fetchData();
-        } catch (err) { alert(err?.message || 'Error saving category'); }
+            loadData(false);
+        } catch (err) { toast.error(err?.message || 'Error'); }
         finally { setSaving(false); }
     };
 
     const handleDelete = async () => {
         if (!deleteConfirm) return;
+        setItems(prev => prev.filter(i => i.categoryId !== deleteConfirm.categoryId));
+        setDeleteConfirm(null);
         try {
             await categoryService.deleteCategory(deleteConfirm.categoryId);
-            fetchData();
-        } catch (err) { alert(err?.message || 'Error deleting category'); }
-        finally { setDeleteConfirm(null); }
+            toast.success('Category deleted');
+        } catch (err) { toast.error(err?.message || 'Error'); loadData(false); }
     };
 
     return (

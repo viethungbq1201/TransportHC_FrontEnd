@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import toast from 'react-hot-toast';
 import { Plus, Search, Trash2, X, FileText, CheckCircle, XCircle, Pencil, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ActionButton from '@/components/ActionButton';
@@ -36,8 +37,11 @@ const TransactionListPage = () => {
     const [saving, setSaving] = useState(false);
     const [deleteConfirmId, setDeleteConfirmId] = useState(null);
 
-    const fetchData = async () => { try { const data = await transactionService.getAllTransactions(); setItems(Array.isArray(data) ? data : []); } catch { setItems([]); } finally { setLoading(false); } };
-    useEffect(() => { fetchData(); }, []);
+    const loadData = useCallback(async (showSpinner = true) => {
+        if (showSpinner) setLoading(true);
+        try { const data = await transactionService.getAllTransactions(); setItems(Array.isArray(data) ? data : []); } catch { /* keep existing */ } finally { if (showSpinner) setLoading(false); }
+    }, []);
+    useEffect(() => { loadData(true); }, [loadData]);
 
     const filtered = items.filter(t => {
         const term = search.toLowerCase();
@@ -74,20 +78,33 @@ const TransactionListPage = () => {
         try {
             if (editId) {
                 await transactionService.updateTransaction(editId, form);
+                toast.success('Transaction updated');
             } else {
                 await transactionService.createTransaction(form);
+                toast.success('Transaction created');
             }
             setShowModal(false);
-            fetchData();
-        } catch (err) { alert(err?.message || 'Error'); }
+            loadData(false);
+        } catch (err) { toast.error(err?.message || 'Error'); }
         finally { setSaving(false); }
     };
 
-    // Approve/Reject are separate PUT endpoints with NO body
-    const handleApprove = async (id) => { try { await transactionService.approveTransaction(id); fetchData(); } catch (err) { alert(err?.message || 'Error'); } };
-    const handleReject = async (id) => { try { await transactionService.rejectTransaction(id); fetchData(); } catch (err) { alert(err?.message || 'Error'); } };
+    const handleApprove = async (id) => {
+        setItems(prev => prev.map(i => i.transactionId === id ? { ...i, approveStatus: 'APPROVED' } : i));
+        try { await transactionService.approveTransaction(id); toast.success('Transaction approved'); } catch (err) { toast.error(err?.message || 'Error'); loadData(false); }
+    };
+    const handleReject = async (id) => {
+        setItems(prev => prev.map(i => i.transactionId === id ? { ...i, approveStatus: 'REJECTED' } : i));
+        try { await transactionService.rejectTransaction(id); toast.success('Transaction rejected'); } catch (err) { toast.error(err?.message || 'Error'); loadData(false); }
+    };
     const handleDelete = (id) => { setDeleteConfirmId(id); };
-    const confirmDelete = async () => { if (!deleteConfirmId) return; try { await transactionService.deleteTransaction(deleteConfirmId); fetchData(); setDeleteConfirmId(null); } catch (err) { alert(err?.message || 'Error'); } };
+    const confirmDelete = async () => {
+        if (!deleteConfirmId) return;
+        setItems(prev => prev.filter(i => i.transactionId !== deleteConfirmId));
+        setDeleteConfirmId(null);
+        try { await transactionService.deleteTransaction(deleteConfirmId); toast.success('Transaction deleted'); }
+        catch (err) { toast.error(err?.message || 'Error'); loadData(false); }
+    };
 
     return (
         <div>

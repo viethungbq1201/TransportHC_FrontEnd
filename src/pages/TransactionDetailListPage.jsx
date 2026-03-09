@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import toast from 'react-hot-toast';
 import { useLocation } from 'react-router-dom';
 import { Plus, Search, Pencil, Trash2, X } from 'lucide-react';
 import ActionButton from '@/components/ActionButton';
@@ -25,8 +26,8 @@ const TransactionDetailListPage = () => {
     const [actionMenuId, setActionMenuId] = useState(null);
     const [deleteConfirmId, setDeleteConfirmId] = useState(null);
 
-    const fetchData = async () => {
-        setLoading(true);
+    const loadData = useCallback(async (showSpinner = true) => {
+        if (showSpinner) setLoading(true);
         try {
             const results = await Promise.allSettled([
                 transactionDetailService.getAll(),
@@ -46,14 +47,10 @@ const TransactionDetailListPage = () => {
             setInventories(Array.isArray(invData) ? invData : []);
         } catch (error) {
             console.error(error);
-            setItems([]);
-            setTransactions([]);
-            setProducts([]);
-            setInventories([]);
         }
-        finally { setLoading(false); }
-    };
-    useEffect(() => { fetchData(); }, []);
+        finally { if (showSpinner) setLoading(false); }
+    }, []);
+    useEffect(() => { loadData(true); }, [loadData]);
 
     const filtered = items.filter(r => {
         const term = search.toLowerCase();
@@ -90,12 +87,14 @@ const TransactionDetailListPage = () => {
             };
             if (editId) {
                 await transactionDetailService.update(editId, payload);
+                toast.success('Detail updated');
             } else {
                 await transactionDetailService.create(payload);
+                toast.success('Detail created');
             }
             setShowModal(false);
-            fetchData();
-        } catch (err) { alert(err?.message || 'Error'); }
+            loadData(false);
+        } catch (err) { toast.error(err?.message || 'Error'); }
         finally { setSaving(false); }
     };
 
@@ -105,8 +104,10 @@ const TransactionDetailListPage = () => {
 
     const confirmDelete = async () => {
         if (!deleteConfirmId) return;
-        try { await transactionDetailService.delete(deleteConfirmId); fetchData(); setDeleteConfirmId(null); }
-        catch (err) { alert(err?.message || 'Error'); }
+        setItems(prev => prev.filter(i => i.transactionDetailId !== deleteConfirmId));
+        setDeleteConfirmId(null);
+        try { await transactionDetailService.delete(deleteConfirmId); toast.success('Detail deleted'); }
+        catch (err) { toast.error(err?.message || 'Error'); loadData(false); }
     }
 
     const groupedItems = filtered.reduce((acc, current) => {

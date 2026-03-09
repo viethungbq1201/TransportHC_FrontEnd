@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import toast from 'react-hot-toast';
 import { Plus, Search, Pencil, Trash2, X, MapPin, Eye } from 'lucide-react';
 import ActionButton from '@/components/ActionButton';
 import routeService from '@/services/routeService';
@@ -16,15 +17,16 @@ const RouteListPage = () => {
     const [deleteConfirm, setDeleteConfirm] = useState(null);
     const [detailRoute, setDetailRoute] = useState(null);
 
-    const fetchData = async () => {
+    const loadData = useCallback(async (showSpinner = true) => {
+        if (showSpinner) setLoading(true);
         try {
             const data = await routeService.getRoutes();
             setRoutes(Array.isArray(data) ? data : []);
-        } catch { setRoutes([]); }
-        finally { setLoading(false); }
-    };
+        } catch { /* keep existing */ }
+        finally { if (showSpinner) setLoading(false); }
+    }, []);
 
-    useEffect(() => { fetchData(); }, []);
+    useEffect(() => { loadData(true); }, [loadData]);
 
     const filtered = routes.filter(r => {
         if (!search) return true;
@@ -61,22 +63,25 @@ const RouteListPage = () => {
             };
             if (editingRoute) {
                 await routeService.updateRoute(editingRoute.id, payload);
+                toast.success('Route updated');
             } else {
                 await routeService.createRoute(payload);
+                toast.success('Route created');
             }
             setShowModal(false);
-            fetchData();
-        } catch (err) { alert(err?.message || 'Error saving route'); }
+            loadData(false);
+        } catch (err) { toast.error(err?.message || 'Error saving route'); }
         finally { setSaving(false); }
     };
 
     const handleDelete = async () => {
         if (!deleteConfirm) return;
+        setRoutes(prev => prev.filter(r => r.id !== deleteConfirm.id));
+        setDeleteConfirm(null);
         try {
             await routeService.deleteRoute(deleteConfirm.id);
-            fetchData();
-        } catch (err) { alert(err?.message || 'Error deleting route'); }
-        finally { setDeleteConfirm(null); }
+            toast.success('Route deleted');
+        } catch (err) { toast.error(err?.message || 'Error'); loadData(false); }
     };
 
     return (

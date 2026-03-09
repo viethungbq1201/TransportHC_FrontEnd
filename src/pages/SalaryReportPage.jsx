@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import toast from 'react-hot-toast';
 import { Plus, Search, MoreHorizontal, X, Users as UsersIcon, DollarSign, Clock, CheckCircle, FileText, Trash2, Pencil, Eye } from 'lucide-react';
 import salaryReportService from '@/services/salaryReportService';
 import userService from '@/services/userService';
@@ -36,23 +37,20 @@ const SalaryReportPage = () => {
     const [selectedYear, setSelectedYear] = useState(String(now.getFullYear()));
     const [drivers, setDrivers] = useState([]);
 
-    const fetchData = async () => {
-        setLoading(true);
+    const loadData = useCallback(async (showSpinner = true) => {
+        if (showSpinner) setLoading(true);
         try {
-            // Fetch users for the dropdown
             const [reportResult, userResult] = await Promise.all([
                 salaryReportService.getSalaryReports(`${selectedYear}-${selectedMonth}-01`),
                 userService.getUsers()
             ]);
             setItems(Array.isArray(reportResult) ? reportResult : []);
-
-            // Filter only drivers for the creation dropdown
             const driverUsers = Array.isArray(userResult) ? userResult.filter(u => u.roles && u.roles.includes('DRIVER')) : [];
             setDrivers(driverUsers);
-        } catch { setItems([]); }
-        finally { setLoading(false); }
-    };
-    useEffect(() => { fetchData(); }, [selectedMonth, selectedYear]);
+        } catch { /* keep existing */ }
+        finally { if (showSpinner) setLoading(false); }
+    }, [selectedMonth, selectedYear]);
+    useEffect(() => { loadData(true); }, [loadData]);
 
     const filtered = items.filter(r => {
         const term = search.toLowerCase();
@@ -118,30 +116,33 @@ const SalaryReportPage = () => {
             };
             if (editId) {
                 await salaryReportService.updateSalaryReport(editId, payload);
+                toast.success('Report updated');
             } else {
                 await salaryReportService.createSalaryReport(Number(form.userId), payload);
+                toast.success('Report created');
             }
             setShowModal(false);
-            fetchData();
-        } catch (err) { alert(err?.message || 'Error'); }
+            loadData(false);
+        } catch (err) { toast.error(err?.message || 'Error'); }
         finally { setSaving(false); }
     };
 
     const handleGenerateAll = async () => {
         setSaving(true);
         try {
-            // GET /salaryReport/createAllSalaryReport — no body
             await salaryReportService.createAllSalaryReport();
             setShowGenerateModal(false);
-            fetchData();
-        } catch (err) { alert(err?.message || 'Error'); }
+            toast.success('All reports generated');
+            loadData(false);
+        } catch (err) { toast.error(err?.message || 'Error'); }
         finally { setSaving(false); }
     };
 
     const handleMarkDone = async (id) => {
-        try { await salaryReportService.markAsDone(id); fetchData(); }
-        catch (err) { alert(err?.message || 'Error'); }
+        setItems(prev => prev.map(i => (i.reportId || i.salaryReportId) === id ? { ...i, status: 'DONE' } : i));
         setActionMenuId(null);
+        try { await salaryReportService.markAsDone(id); toast.success('Marked as done'); }
+        catch (err) { toast.error(err?.message || 'Error'); loadData(false); }
     };
 
     const handleDelete = (id) => {
@@ -151,8 +152,10 @@ const SalaryReportPage = () => {
 
     const confirmDelete = async () => {
         if (!deleteConfirmId) return;
-        try { await salaryReportService.deleteSalaryReport(deleteConfirmId); fetchData(); setDeleteConfirmId(null); }
-        catch (err) { alert(err?.message || 'Error'); }
+        setItems(prev => prev.filter(i => (i.reportId || i.salaryReportId) !== deleteConfirmId));
+        setDeleteConfirmId(null);
+        try { await salaryReportService.deleteSalaryReport(deleteConfirmId); toast.success('Report deleted'); }
+        catch (err) { toast.error(err?.message || 'Error'); loadData(false); }
     };
 
     return (

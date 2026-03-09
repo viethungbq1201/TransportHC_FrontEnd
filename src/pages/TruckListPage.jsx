@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import toast from 'react-hot-toast';
 import { Plus, Search, Pencil, Trash2, X, Truck as TruckIcon, Eye, ChevronDown } from 'lucide-react';
 import ActionButton from '@/components/ActionButton';
 import truckService from '@/services/truckService';
@@ -39,15 +40,16 @@ const TruckListPage = () => {
     const statusDropdownRef = useRef(null);
     const statusBtnRef = useRef({});
 
-    const fetchTrucks = async () => {
+    const loadData = useCallback(async (showSpinner = true) => {
+        if (showSpinner) setLoading(true);
         try {
             const data = await truckService.getAllTrucks();
             setTrucks(Array.isArray(data) ? data : []);
-        } catch { setTrucks([]); }
-        finally { setLoading(false); }
-    };
+        } catch { /* keep existing */ }
+        finally { if (showSpinner) setLoading(false); }
+    }, []);
 
-    useEffect(() => { fetchTrucks(); }, []);
+    useEffect(() => { loadData(true); }, [loadData]);
 
     // Close status dropdown when clicking outside
     useEffect(() => {
@@ -94,30 +96,34 @@ const TruckListPage = () => {
             };
             if (editingTruck) {
                 await truckService.updateTruck(editingTruck.id, payload);
+                toast.success('Truck updated');
             } else {
                 await truckService.createTruck(payload);
+                toast.success('Truck created');
             }
             setShowModal(false);
-            fetchTrucks();
-        } catch (err) { alert(err?.message || 'Error saving truck'); }
+            loadData(false);
+        } catch (err) { toast.error(err?.message || 'Error saving truck'); }
         finally { setSaving(false); }
     };
 
     const handleStatusChange = async (truck, newStatus) => {
         setStatusDropdownId(null);
+        setTrucks(prev => prev.map(t => t.id === truck.id ? { ...t, status: newStatus } : t));
         try {
             await truckService.updateTruckStatus(truck.id, { status: newStatus });
-            fetchTrucks();
-        } catch (err) { alert(err?.message || 'Error updating status'); }
+            toast.success('Status updated');
+        } catch (err) { toast.error(err?.message || 'Error'); loadData(false); }
     };
 
     const handleDelete = async () => {
         if (!deleteConfirm) return;
+        setTrucks(prev => prev.filter(t => t.id !== deleteConfirm.id));
+        setDeleteConfirm(null);
         try {
             await truckService.deleteTruck(deleteConfirm.id);
-            fetchTrucks();
-        } catch (err) { alert(err?.message || 'Error deleting truck'); }
-        finally { setDeleteConfirm(null); }
+            toast.success('Truck deleted');
+        } catch (err) { toast.error(err?.message || 'Error'); loadData(false); }
     };
 
     return (
