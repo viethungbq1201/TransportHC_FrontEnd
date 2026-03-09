@@ -543,7 +543,6 @@ const UserListPage = () => {
                                             onChange={e => setForm({ ...form, basicSalary: e.target.value })}
                                             placeholder="Required (>0)"
                                             min="1"
-                                            step="1000"
                                             required
                                             className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                                         />
@@ -556,7 +555,6 @@ const UserListPage = () => {
                                             onChange={e => setForm({ ...form, advanceMoney: e.target.value })}
                                             placeholder="Optional (>=0)"
                                             min="0"
-                                            step="1000"
                                             className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                                         />
                                     </div>
